@@ -27,13 +27,13 @@ export default function RootLayout({
 }>) {
 	return (
 		<html
-			lang="en"
-			suppressHydrationWarning
 			className={cn(
 				"font-sans",
 				spaceGrotesk.variable,
-				ebGaramondHeading.variable,
+				ebGaramondHeading.variable
 			)}
+			lang="en"
+			suppressHydrationWarning
 		>
 			<body>
 				<div>{children}</div>
