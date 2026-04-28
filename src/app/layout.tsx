@@ -3,6 +3,10 @@ import { EB_Garamond, Space_Grotesk } from "next/font/google";
 
 import "../styles/index.css";
 
+import { AppSidebar } from "@/components/app-sidebar";
+import { Header } from "@/components/header";
+import { ThemeProvider } from "@/components/theme-provider";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
 const ebGaramondHeading = EB_Garamond({
@@ -18,9 +22,15 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
 	title: "Iris Studio",
 	description: "Iris Studio - Organize suas campanhas",
+	icons: {
+		icon: [
+			{ url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+			{ url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+		],
+	},
 };
 
-export default function RootLayout({
+export default async function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
@@ -36,7 +46,17 @@ export default function RootLayout({
 			suppressHydrationWarning
 		>
 			<body>
-				<div>{children}</div>
+				<ThemeProvider>
+					<SidebarProvider>
+						<AppSidebar />
+						<SidebarInset>
+							<main className="p-2">
+								<Header />
+								{children}
+							</main>
+						</SidebarInset>
+					</SidebarProvider>
+				</ThemeProvider>
 			</body>
 		</html>
 	);
