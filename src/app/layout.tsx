@@ -49,11 +49,9 @@ export default async function RootLayout({
 				<ThemeProvider>
 					<SidebarProvider>
 						<AppSidebar />
-						<SidebarInset>
-							<main className="p-2">
-								<Header />
-								{children}
-							</main>
+						<SidebarInset className="grid grid-cols-1 grid-rows-[auto_1fr] px-4 py-2">
+							<Header />
+							{children}
 						</SidebarInset>
 					</SidebarProvider>
 				</ThemeProvider>

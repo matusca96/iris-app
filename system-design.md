@@ -51,14 +51,14 @@ Clicking a single image or palette opens a **detail view** (full-page or modal) 
 ### Images module
 - `ImageGrid` — **masonry grid** layout (variable-height cards based on image aspect ratio); switches to list view based on `view` URL param
 - `ImageCard` — displays thumbnail, name, tags, and comment count; supports selection mode checkbox
-- `ImageForm` — URL input with validation (`HEAD` request to confirm image content-type), name, group, and tag assignment
-- `ImageDetail` — full detail view: large image preview, metadata (name, group, tags), and full comment thread via `CommentThread`
+- `ImageForm` — URL input with validation (`HEAD` request to confirm image content-type), name, **groups**, and tag assignment
+- `ImageDetail` — full detail view: large image preview, metadata (name, groups, tags), and full comment thread via `CommentThread`
 
 ### Palettes module
 - `PaletteGrid` — uniform grid layout (fixed-height cards); switches to list view based on `view` URL param
 - `PaletteCard` — displays OKLCH color swatches, name, tags, and comment count; supports selection mode checkbox
-- `PaletteForm` — color input with OKLCH storage format (converted from hex picker via `culori`), name, group, and tag assignment
-- `PaletteDetail` — full detail view: large swatch display, metadata, and full comment thread via `CommentThread`
+- `PaletteForm` — color input with OKLCH storage format (converted from hex picker via `culori`), name, **groups**, and tag assignment
+- `PaletteDetail` — full detail view: large swatch display, metadata (groups, tags), and full comment thread via `CommentThread`
 
 ### Detail view components
 Shared between `ImageDetail` and `PaletteDetail`:
@@ -106,8 +106,8 @@ const ImageSchema = z.object({
   id: z.string(),
   name: z.string(),
   url: z.string().url(),
-  groupId: z.string().nullable(),
-  tags: z.array(z.string()),        // tag ids
+  groupIds: z.array(z.string()),       // group ids, like tags
+  tags: z.array(z.string()),         // tag ids
   comments: z.array(CommentSchema),
   createdAt: z.number(),
 })
@@ -118,7 +118,7 @@ const PaletteSchema = z.object({
   colors: z.array(                  // stored as OKLCH strings
     z.string().regex(/^oklch\(\d+(\.\d+)?%?\s+\d+(\.\d+)?\s+\d+(\.\d+)?\)$/)
   ),
-  groupId: z.string().nullable(),
+  groupIds: z.array(z.string()),
   tags: z.array(z.string()),
   comments: z.array(CommentSchema),
   createdAt: z.number(),
@@ -212,7 +212,7 @@ function filterItems<T extends Image | Palette>(
   { groupId, tags, query }: FilterOptions
 ): T[] {
   return items
-    .filter(i => !groupId || i.groupId === groupId)
+    .filter(i => !groupId || i.groupIds.includes(groupId))
     .filter(i => tags.length === 0 || tags.every(t => i.tags.includes(t)))
     .filter(i => !query || matchesQuery(i, query))
 }
