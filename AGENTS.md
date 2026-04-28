@@ -70,6 +70,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Use early returns to reduce nesting
 - Prefer simple conditionals over nested ternary operators
 - Group related code together and separate concerns
+- For complex UI features, always create a dedicated folder and split by responsibility (container, child components, hooks, helpers, tests) instead of keeping everything in one large component file
 
 ### Security
 

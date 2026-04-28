@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EB_Garamond, Space_Grotesk } from "next/font/google";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import "../styles/index.css";
 
@@ -46,15 +47,17 @@ export default async function RootLayout({
 			suppressHydrationWarning
 		>
 			<body>
-				<ThemeProvider>
-					<SidebarProvider>
-						<AppSidebar />
-						<SidebarInset className="grid grid-cols-1 grid-rows-[auto_1fr] px-4 py-2">
-							<Header />
-							{children}
-						</SidebarInset>
-					</SidebarProvider>
-				</ThemeProvider>
+				<NuqsAdapter>
+					<ThemeProvider>
+						<SidebarProvider>
+							<AppSidebar />
+							<SidebarInset className="grid grid-cols-1 grid-rows-[auto_1fr] px-4 py-2">
+								<Header />
+								{children}
+							</SidebarInset>
+						</SidebarProvider>
+					</ThemeProvider>
+				</NuqsAdapter>
 			</body>
 		</html>
 	);
