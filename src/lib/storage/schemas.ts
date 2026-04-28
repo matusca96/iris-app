@@ -18,6 +18,8 @@ export const TagSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	color: z.string().regex(hexColorRegex),
+	isNew: z.boolean().optional(),
+	creatable: z.string().optional(),
 });
 
 export const ImageSchema = z.object({

@@ -5,7 +5,7 @@ import {
 	PREVIEW_DEBOUNCE_MS,
 	type PreviewStatus,
 	validateImageUrl,
-} from "./helpers";
+} from "./add-image-modal.helpers";
 
 const checkImageUrl = async (
 	value: string,

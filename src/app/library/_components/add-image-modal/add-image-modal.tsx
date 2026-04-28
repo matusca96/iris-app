@@ -3,11 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
 	CheckmarkBadge01Icon,
+	Link04Icon,
 	Loading01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -19,16 +20,22 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import { useContentStore } from "@/store/content";
-import { GroupSelector } from "./group-selector";
+import {
+	findTagByNormalizedName,
+	formatPreviewError,
+} from "./add-image-modal.helpers";
 import {
 	type AddImageFormValues,
 	addImageFormSchema,
-	findTagByNormalizedName,
-	formatPreviewError,
-	type TagOption,
-} from "./helpers";
+} from "./add-image-modal.schema";
+import { GroupSelector } from "./group-selector";
 import { PreviewPanel } from "./preview-panel";
 import { TagSelector } from "./tag-selector";
 import { useImagePreview } from "./use-image-preview";
@@ -39,63 +46,53 @@ type AddImageModalProps = {
 };
 
 export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
-	const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
-	const [selectedTags, setSelectedTags] = useState<TagOption[]>([]);
 	const [tagQuery, setTagQuery] = useState("");
 
-	const existingTagIdsOnOpenRef = useRef<Set<string>>(new Set());
+	const { groups, addImage, addTag } = useContentStore();
 
-	const { groups, tags, addImage, addTag } = useContentStore();
-
-	const {
-		register,
-		handleSubmit,
-		reset,
-		setError,
-		clearErrors,
-		watch,
-		formState: { errors, isSubmitting },
-	} = useForm<AddImageFormValues>({
+	const form = useForm<AddImageFormValues>({
 		defaultValues: {
 			name: "",
 			url: "",
+			tags: [],
+			groupIds: [],
 		},
 		resolver: zodResolver(addImageFormSchema),
 	});
 
-	const watchedUrl = watch("url");
+	const [url, tags, groupIds] = useWatch({
+		control: form.control,
+		name: ["url", "tags", "groupIds"],
+	});
 
 	const { previewStatus, previewUrl, checkImageUrl, resetPreview } =
-		useImagePreview(watchedUrl ?? "", open);
+		useImagePreview(url ?? "", open);
 
-	const resetForm = useCallback(() => {
-		reset();
-		setSelectedGroupIds([]);
-		setSelectedTags([]);
+	const resetForm = () => {
+		form.reset();
 		setTagQuery("");
 		resetPreview();
-	}, [reset, resetPreview]);
+	};
 
 	useEffect(() => {
 		if (!open) {
 			resetForm();
 			return;
 		}
-		existingTagIdsOnOpenRef.current = new Set(tags.map((tag) => tag.id));
-	}, [open, resetForm, tags]);
+	}, [open, resetForm]);
 
 	useEffect(() => {
-		if (errors.url?.message && watchedUrl?.trim()) {
-			clearErrors("url");
+		if (form.formState.errors.url?.message && url?.trim()) {
+			form.clearErrors("url");
 		}
-	}, [clearErrors, errors.url?.message, watchedUrl]);
+	}, [form.formState.errors.url?.message, url]);
 
 	const validateBeforeSubmit = async (values: AddImageFormValues) => {
 		const trimmedName = values.name.trim();
 		const trimmedUrl = values.url.trim();
 		const status = await checkImageUrl(trimmedUrl);
 		if (status !== "preview-ready") {
-			setError("url", {
+			form.setError("url", {
 				message: formatPreviewError(status) ?? "Falha ao validar a imagem.",
 			});
 			return null;
@@ -113,7 +110,7 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 		const nextTagIds: string[] = [];
 		const latestTags = useContentStore.getState().tags;
 
-		for (const tag of selectedTags) {
+		for (const tag of tags) {
 			if (!tag.isNew) {
 				nextTagIds.push(tag.id);
 				continue;
@@ -132,14 +129,15 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 		addImage({
 			name: validated.trimmedName,
 			url: validated.trimmedUrl,
-			groupIds: selectedGroupIds,
+			groupIds,
 			tags: nextTagIds,
 		});
 
 		onOpenChange(false);
 	};
 
-	const disableSubmit = isSubmitting || previewStatus === "checking";
+	const disableSubmit =
+		form.formState.isSubmitting || previewStatus === "checking";
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
@@ -154,7 +152,7 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 				<Separator />
 				<form
 					className="flex flex-col gap-5 px-6 pb-6"
-					onSubmit={handleSubmit(onSubmit)}
+					onSubmit={form.handleSubmit(onSubmit)}
 				>
 					<div className="grid gap-5 md:grid-cols-2">
 						<div className="flex flex-col gap-4">
@@ -162,12 +160,17 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 								<label className="font-medium text-sm" htmlFor="image-url">
 									URL da imagem
 								</label>
-								<Input
-									id="image-url"
-									inputMode="url"
-									placeholder="https://exemplo.com/imagem.jpg"
-									{...register("url")}
-								/>
+								<InputGroup>
+									<InputGroupAddon>
+										<HugeiconsIcon icon={Link04Icon} />
+									</InputGroupAddon>
+									<InputGroupInput
+										id="image-url"
+										inputMode="url"
+										placeholder="https://exemplo.com/imagem.jpg"
+										{...form.register("url")}
+									/>
+								</InputGroup>
 								{previewStatus === "checking" ? (
 									<div className="flex items-center gap-1">
 										<HugeiconsIcon
@@ -188,9 +191,9 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 										<p className="text-muted-foreground text-xs">URL válida.</p>
 									</div>
 								) : null}
-								{errors.url?.message ? (
+								{form.formState.errors.url?.message ? (
 									<p className="text-destructive text-xs">
-										{errors.url.message}
+										{form.formState.errors.url.message}
 									</p>
 								) : null}
 							</div>
@@ -202,11 +205,11 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 								<Input
 									id="image-name"
 									placeholder="Nome da imagem"
-									{...register("name")}
+									{...form.register("name")}
 								/>
-								{errors.name?.message ? (
+								{form.formState.errors.name?.message ? (
 									<p className="text-destructive text-xs">
-										{errors.name.message}
+										{form.formState.errors.name.message}
 									</p>
 								) : null}
 							</div>
@@ -220,35 +223,35 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 
 					<GroupSelector
 						groups={groups}
-						onToggleGroup={(groupId) =>
-							setSelectedGroupIds((current) =>
-								current.includes(groupId)
-									? current.filter((id) => id !== groupId)
-									: [...current, groupId]
-							)
-						}
-						selectedGroupIds={selectedGroupIds}
+						onToggleGroup={(groupId) => {
+							const current = form.getValues("groupIds");
+							if (current.includes(groupId)) {
+								return current.filter((id) => id !== groupId);
+							}
+							return [...current, groupId];
+						}}
+						selectedGroupIds={groupIds}
 					/>
 
 					<TagSelector
-						existingTagIdsOnOpen={existingTagIdsOnOpenRef.current}
-						selectedTags={selectedTags}
-						setSelectedTags={setSelectedTags}
+						onTagsChange={(tags) => {
+							form.setValue("tags", tags);
+						}}
+						selectedTags={tags}
 						setTagQuery={setTagQuery}
 						tagQuery={tagQuery}
-						tags={tags}
 					/>
 
 					<DialogFooter>
 						<Button
 							onClick={() => onOpenChange(false)}
 							type="button"
-							variant="outline"
+							variant="ghost"
 						>
 							Cancelar
 						</Button>
 						<Button disabled={disableSubmit} type="submit">
-							{isSubmitting ? "Salvando..." : "Salvar imagem"}
+							{form.formState.isSubmitting ? "Salvando..." : "Salvar imagem"}
 						</Button>
 					</DialogFooter>
 				</form>

@@ -73,10 +73,3 @@ export const formatPreviewError = (status: PreviewStatus) => {
 	}
 	return null;
 };
-
-export const addImageFormSchema = z.object({
-	name: z.string().trim().min(1, "O nome da imagem e obrigatorio."),
-	url: z.string().trim().min(1, "A URL da imagem e obrigatoria."),
-});
-
-export type AddImageFormValues = z.infer<typeof addImageFormSchema>;

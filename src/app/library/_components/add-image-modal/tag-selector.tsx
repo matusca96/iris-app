@@ -1,14 +1,16 @@
 import {
 	AddCircleIcon,
-	CheckmarkCircle02Icon,
+	BadgeInfoIcon,
+	Tick01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import type { Dispatch, SetStateAction } from "react";
-import { useMemo } from "react";
+import type { KeyboardEvent } from "react";
+import { useMemo, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
 	Combobox,
+	ComboboxChip,
 	ComboboxChips,
 	ComboboxChipsInput,
 	ComboboxCollection,
@@ -17,13 +19,21 @@ import {
 	ComboboxItem,
 	ComboboxList,
 	ComboboxValue,
+	useComboboxAnchor,
 } from "@/components/ui/combobox";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { Tag } from "@/lib/storage/schemas";
+import { cn } from "@/lib/utils";
+import { useContentStore } from "@/store/content";
 import {
 	canCreateTagFromQuery,
 	DEFAULT_NEW_TAG_COLOR,
@@ -32,15 +42,13 @@ import {
 	normalizeTagName,
 	TAG_COLOR_OPTIONS,
 	type TagOption,
-} from "./helpers";
+} from "./add-image-modal.helpers";
 
 type TagSelectorProps = {
-	tags: Tag[];
 	selectedTags: TagOption[];
 	tagQuery: string;
-	existingTagIdsOnOpen: Set<string>;
 	setTagQuery: (value: string) => void;
-	setSelectedTags: Dispatch<SetStateAction<TagOption[]>>;
+	onTagsChange: (tags: TagOption[]) => void;
 };
 
 const toTagOption = (tag: Tag): TagOption => ({
@@ -74,13 +82,16 @@ const isSameSelection = (current: TagOption[], next: TagOption[]) => {
 };
 
 export const TagSelector = ({
-	tags,
 	selectedTags,
 	tagQuery,
-	existingTagIdsOnOpen,
 	setTagQuery,
-	setSelectedTags,
+	onTagsChange,
 }: TagSelectorProps) => {
+	const highlightedItemRef = useRef<TagOption | undefined>(undefined);
+
+	const { tags } = useContentStore();
+	const anchor = useComboboxAnchor();
+
 	const tagOptions = useMemo(() => tags.map(toTagOption), [tags]);
 	const normalizedQuery = tagQuery.trim();
 	const canCreateTag = useMemo(() => {
@@ -118,11 +129,14 @@ export const TagSelector = ({
 			const existing = findTagByNormalizedName(tags, nextCreatable.creatable);
 			if (existing) {
 				const existingOption = toTagOption(existing);
-				setSelectedTags((current) =>
-					current.some((tag) => tag.id === existingOption.id)
-						? current
-						: [...current, existingOption]
-				);
+
+				const nextTags = selectedTags.some(
+					(tag) => tag.id === existingOption.id
+				)
+					? selectedTags.filter((tag) => tag.id !== existingOption.id)
+					: [...selectedTags, existingOption];
+
+				onTagsChange(nextTags);
 				setTagQuery("");
 				return;
 			}
@@ -134,56 +148,135 @@ export const TagSelector = ({
 				color: DEFAULT_NEW_TAG_COLOR,
 				isNew: true,
 			};
-			setSelectedTags((current) =>
-				current.some((tag) => tag.id === nextTag.id)
-					? current
-					: [...current, nextTag]
-			);
+
+			const nextTags = selectedTags.some((tag) => tag.id === nextTag.id)
+				? selectedTags.filter((tag) => tag.id !== nextTag.id)
+				: [...selectedTags, nextTag];
+
+			onTagsChange(nextTags);
 			setTagQuery("");
 			return;
 		}
 
 		const cleanSelection = nextValues.filter((item) => !item.creatable);
-		setSelectedTags((current) =>
-			isSameSelection(current, cleanSelection) ? current : cleanSelection
-		);
+		const nextTags = isSameSelection(selectedTags, cleanSelection)
+			? selectedTags
+			: cleanSelection;
+
+		onTagsChange(nextTags);
+	};
+
+	const handleTagInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+		if (event.key !== "Enter" || highlightedItemRef.current) {
+			return;
+		}
+		// Keep Enter interactions inside the combobox and avoid parent form submit.
+		event.preventDefault();
 	};
 
 	return (
 		<div className="flex flex-col gap-2">
-			<label className="font-medium text-sm" htmlFor="tags-combobox-input">
+			<label
+				className="flex items-center gap-1 font-medium text-sm"
+				htmlFor="tags-combobox-input"
+			>
 				Tags
+				<Tooltip>
+					<TooltipTrigger>
+						<HugeiconsIcon className="size-4" icon={BadgeInfoIcon} />
+					</TooltipTrigger>
+					<TooltipContent className="flex flex-col items-start">
+						<p>Clique na tag para alterar a sua cor.</p>
+						<p>P.S.: tags existentes não podem ser alteradas.</p>
+					</TooltipContent>
+				</Tooltip>
 			</label>
 			<Combobox
+				autoHighlight
 				inputValue={tagQuery}
 				items={comboboxItems}
 				multiple
 				onInputValueChange={setTagQuery}
+				onItemHighlighted={(item) => {
+					highlightedItemRef.current = item;
+				}}
 				onValueChange={handleTagsChange}
 				value={selectedTags}
 			>
-				<ComboboxChips>
+				<ComboboxChips ref={anchor}>
 					<ComboboxValue>
-						{(value: TagOption[]) => (
+						{(values: TagOption[]) => (
 							<>
-								{value.map((tag) => (
-									<div
-										className="inline-flex min-h-8 items-center rounded-sm bg-muted px-2 text-xs"
-										key={tag.id}
+								{values.map((value) => (
+									<ComboboxChip
+										className="flex items-center gap-1"
+										key={value.id}
 									>
-										{tag.name}
-									</div>
+										<Popover>
+											<PopoverTrigger
+												render={
+													<button
+														aria-disabled={!value.isNew}
+														aria-label={`Escolher cor da tag ${value.name}`}
+														className={cn(
+															"flex cursor-pointer items-center gap-1",
+															!value.isNew &&
+																"pointer-events-none cursor-not-allowed opacity-80"
+														)}
+														type="button"
+													>
+														<div
+															className="size-2.5 rounded-full border"
+															style={{ backgroundColor: value.color }}
+														/>
+														{value.name}
+													</button>
+												}
+											/>
+											<PopoverContent className="w-56 gap-2 p-3">
+												<p className="font-medium text-xs">Cor da tag</p>
+												<div className="grid grid-cols-5 gap-2">
+													{TAG_COLOR_OPTIONS.map((color) => (
+														<Button
+															aria-label={`Selecionar cor ${color}`}
+															className="size-8 rounded-full border"
+															key={color}
+															onClick={() => {
+																const nextTags = selectedTags.map((tag) =>
+																	tag.id === value.id ? { ...tag, color } : tag
+																);
+																onTagsChange(nextTags);
+															}}
+															size="icon"
+															style={{ backgroundColor: color }}
+															type="button"
+															variant={
+																value.color === color ? "default" : "outline"
+															}
+														>
+															{value.color === color ? (
+																<HugeiconsIcon
+																	className="size-5"
+																	icon={Tick01Icon}
+																/>
+															) : null}
+														</Button>
+													))}
+												</div>
+											</PopoverContent>
+										</Popover>
+									</ComboboxChip>
 								))}
 								<ComboboxChipsInput
-									className="min-h-9 text-base md:text-sm"
 									id="tags-combobox-input"
+									onKeyDown={handleTagInputKeyDown}
 									placeholder="Buscar ou criar tag"
 								/>
 							</>
 						)}
 					</ComboboxValue>
 				</ComboboxChips>
-				<ComboboxContent>
+				<ComboboxContent anchor={anchor}>
 					<ComboboxEmpty>Nenhuma tag encontrada.</ComboboxEmpty>
 					<ComboboxList>
 						<ComboboxCollection>
@@ -198,7 +291,13 @@ export const TagSelector = ({
 											<span>Criar "{item.creatable}"</span>
 										</>
 									) : (
-										item.name
+										<>
+											<div
+												className="size-2.5 rounded-full"
+												style={{ backgroundColor: item.color }}
+											/>
+											{item.name}
+										</>
 									)}
 								</ComboboxItem>
 							)}
@@ -206,88 +305,6 @@ export const TagSelector = ({
 					</ComboboxList>
 				</ComboboxContent>
 			</Combobox>
-			<div className="flex min-h-16 flex-col gap-2 rounded-md border p-2">
-				{selectedTags.length ? (
-					selectedTags.map((tag) => {
-						const locked = existingTagIdsOnOpen.has(tag.id);
-						return (
-							<div
-								className="flex min-h-11 items-center gap-2 rounded-md border px-2 py-1.5"
-								key={tag.id}
-							>
-								{locked ? (
-									<span
-										className="size-5 rounded-full border"
-										style={{ backgroundColor: tag.color }}
-										title={`Cor fixa da tag ${tag.name}`}
-									/>
-								) : (
-									<Popover>
-										<PopoverTrigger
-											render={
-												<Button
-													aria-label={`Escolher cor da tag ${tag.name}`}
-													className="size-11 rounded-full border"
-													size="icon"
-													type="button"
-													variant="ghost"
-												/>
-											}
-										/>
-										<PopoverContent className="w-56 gap-2 p-3">
-											<p className="font-medium text-xs">Cor da tag</p>
-											<div className="grid grid-cols-5 gap-2">
-												{TAG_COLOR_OPTIONS.map((color) => (
-													<Button
-														aria-label={`Selecionar cor ${color}`}
-														className="size-11 rounded-full border"
-														key={color}
-														onClick={() =>
-															setSelectedTags((current) =>
-																current.map((item) =>
-																	item.id === tag.id ? { ...item, color } : item
-																)
-															)
-														}
-														size="icon"
-														style={{ backgroundColor: color }}
-														type="button"
-														variant={
-															tag.color === color ? "default" : "outline"
-														}
-													>
-														{tag.color === color ? (
-															<HugeiconsIcon icon={CheckmarkCircle02Icon} />
-														) : null}
-													</Button>
-												))}
-											</div>
-										</PopoverContent>
-									</Popover>
-								)}
-								<span className="flex-1 text-sm">{tag.name}</span>
-								<Button
-									aria-label={`Remover tag ${tag.name}`}
-									onClick={() =>
-										setSelectedTags((current) =>
-											current.filter((item) => item.id !== tag.id)
-										)
-									}
-									size="icon-sm"
-									type="button"
-									variant="ghost"
-								>
-									×
-								</Button>
-							</div>
-						);
-					})
-				) : (
-					<p className="text-muted-foreground text-xs">
-						Selecione tags existentes ou crie novas tags.
-					</p>
-				)}
-			</div>
 		</div>
 	);
 };
