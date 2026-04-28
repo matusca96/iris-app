@@ -7,7 +7,7 @@ import {
 	isImageMimeType,
 	normalizeTagName,
 	validateImageUrl,
-} from "../helpers";
+} from "../add-image-modal.helpers";
 
 const existingTags: Tag[] = [
 	{ id: "tag-1", name: "Nature", color: "#22c55e" },

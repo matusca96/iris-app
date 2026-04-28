@@ -20,7 +20,11 @@ describe("useContentStore", () => {
 	let useContentStore: typeof import("../content").useContentStore;
 
 	beforeEach(async () => {
-		vi.stubGlobal("localStorage", createLocalStorageMock());
+		Object.defineProperty(globalThis, "localStorage", {
+			configurable: true,
+			value: createLocalStorageMock(),
+			writable: true,
+		});
 		vi.resetModules();
 		const mod = await import("../content");
 		useContentStore = mod.useContentStore;

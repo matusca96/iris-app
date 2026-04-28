@@ -7,7 +7,7 @@ import {
 	Loading01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -69,11 +69,11 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 	const { previewStatus, previewUrl, checkImageUrl, resetPreview } =
 		useImagePreview(url ?? "", open);
 
-	const resetForm = () => {
+	const resetForm = useCallback(() => {
 		form.reset();
 		setTagQuery("");
 		resetPreview();
-	};
+	}, [form, resetPreview]);
 
 	useEffect(() => {
 		if (!open) {

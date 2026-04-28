@@ -63,13 +63,13 @@ export const isImageMimeType = (mimeType: string | null) =>
 
 export const formatPreviewError = (status: PreviewStatus) => {
 	if (status === "invalid-url") {
-		return "A URL da imagem precisa ser valida.";
+		return "A URL da imagem precisa ser válida.";
 	}
 	if (status === "not-image") {
-		return "A URL nao parece apontar para um arquivo de imagem.";
+		return "A URL não parece apontar para um arquivo de imagem.";
 	}
 	if (status === "network-error") {
-		return "Nao foi possivel validar a URL no momento.";
+		return "Não foi possível validar a URL no momento.";
 	}
 	return null;
 };
