@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import type { Group } from "@/lib/storage/schemas";
 
 type GroupSelectorProps = {
@@ -12,8 +13,8 @@ export const GroupSelector = ({
 	selectedGroupIds,
 	onToggleGroup,
 }: GroupSelectorProps) => (
-	<div className="flex flex-col gap-2">
-		<p className="font-medium text-sm">Grupos</p>
+	<Field>
+		<FieldLabel>Grupos</FieldLabel>
 		<div className="flex flex-wrap gap-2">
 			{groups.length ? (
 				groups.map((group) => (
@@ -36,5 +37,5 @@ export const GroupSelector = ({
 				</p>
 			)}
 		</div>
-	</div>
+	</Field>
 );

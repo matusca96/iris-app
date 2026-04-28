@@ -19,6 +19,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
 	InputGroup,
@@ -80,12 +81,6 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 			return;
 		}
 	}, [open, resetForm]);
-
-	useEffect(() => {
-		if (form.formState.errors.url?.message && url?.trim()) {
-			form.clearErrors("url");
-		}
-	}, [form.formState.errors.url?.message, url]);
 
 	const validateBeforeSubmit = async (values: AddImageFormValues) => {
 		const trimmedName = values.name.trim();
@@ -156,11 +151,9 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 				>
 					<div className="grid gap-5 md:grid-cols-2">
 						<div className="flex flex-col gap-4">
-							<div className="flex flex-col gap-2">
-								<label className="font-medium text-sm" htmlFor="image-url">
-									URL da imagem
-								</label>
-								<InputGroup>
+							<Field data-invalid={!!form.formState.errors.url}>
+								<FieldLabel htmlFor="image-url">URL da imagem</FieldLabel>
+								<InputGroup aria-invalid={!!form.formState.errors.url}>
 									<InputGroupAddon>
 										<HugeiconsIcon icon={Link04Icon} />
 									</InputGroupAddon>
@@ -191,28 +184,19 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 										<p className="text-muted-foreground text-xs">URL válida.</p>
 									</div>
 								) : null}
-								{form.formState.errors.url?.message ? (
-									<p className="text-destructive text-xs">
-										{form.formState.errors.url.message}
-									</p>
-								) : null}
-							</div>
 
-							<div className="flex flex-col gap-2">
-								<label className="font-medium text-sm" htmlFor="image-name">
-									Nome
-								</label>
+								<FieldError>{form.formState.errors.url?.message}</FieldError>
+							</Field>
+
+							<Field data-invalid={!!form.formState.errors.name}>
+								<FieldLabel htmlFor="image-name">Nome</FieldLabel>
 								<Input
 									id="image-name"
 									placeholder="Nome da imagem"
 									{...form.register("name")}
 								/>
-								{form.formState.errors.name?.message ? (
-									<p className="text-destructive text-xs">
-										{form.formState.errors.name.message}
-									</p>
-								) : null}
-							</div>
+								<FieldError>{form.formState.errors.name?.message}</FieldError>
+							</Field>
 						</div>
 
 						<PreviewPanel

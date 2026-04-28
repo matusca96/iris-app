@@ -21,6 +21,7 @@ import {
 	ComboboxValue,
 	useComboboxAnchor,
 } from "@/components/ui/combobox";
+import { Field, FieldLabel } from "@/components/ui/field";
 import {
 	Popover,
 	PopoverContent,
@@ -175,9 +176,9 @@ export const TagSelector = ({
 	};
 
 	return (
-		<div className="flex flex-col gap-2">
-			<label
-				className="flex items-center gap-1 font-medium text-sm"
+		<Field>
+			<FieldLabel
+				className="flex items-center gap-1"
 				htmlFor="tags-combobox-input"
 			>
 				Tags
@@ -190,7 +191,8 @@ export const TagSelector = ({
 						<p>P.S.: tags existentes não podem ser alteradas.</p>
 					</TooltipContent>
 				</Tooltip>
-			</label>
+			</FieldLabel>
+
 			<Combobox
 				autoHighlight
 				inputValue={tagQuery}
@@ -305,6 +307,6 @@ export const TagSelector = ({
 					</ComboboxList>
 				</ComboboxContent>
 			</Combobox>
-		</div>
+		</Field>
 	);
 };
