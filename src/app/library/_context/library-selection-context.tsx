@@ -22,6 +22,9 @@ type LibrarySelectionContextValue = {
 	createGroupModalOpen: boolean;
 	openCreateGroupModal: () => void;
 	closeCreateGroupModal: () => void;
+	addToCollectionModalOpen: boolean;
+	openAddToCollectionModal: () => void;
+	closeAddToCollectionModal: () => void;
 };
 
 const LibrarySelectionContext =
@@ -39,6 +42,8 @@ export const LibrarySelectionProvider = ({
 		() => new Set<string>()
 	);
 	const [createGroupModalOpen, setCreateGroupModalOpen] = useState(false);
+	const [addToCollectionModalOpen, setAddToCollectionModalOpen] =
+		useState(false);
 
 	const toggleImage = useCallback((id: string) => {
 		setSelectedImageIds((prev) => {
@@ -74,7 +79,7 @@ export const LibrarySelectionProvider = ({
 			if (e.key !== "Escape") {
 				return;
 			}
-			if (createGroupModalOpen) {
+			if (createGroupModalOpen || addToCollectionModalOpen) {
 				return;
 			}
 			if (selectedImageIds.size === 0 && selectedPaletteIds.size === 0) {
@@ -87,6 +92,7 @@ export const LibrarySelectionProvider = ({
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, [
 		clearSelection,
+		addToCollectionModalOpen,
 		createGroupModalOpen,
 		selectedImageIds.size,
 		selectedPaletteIds.size,
@@ -105,6 +111,9 @@ export const LibrarySelectionProvider = ({
 			createGroupModalOpen,
 			openCreateGroupModal: () => setCreateGroupModalOpen(true),
 			closeCreateGroupModal: () => setCreateGroupModalOpen(false),
+			addToCollectionModalOpen,
+			openAddToCollectionModal: () => setAddToCollectionModalOpen(true),
+			closeAddToCollectionModal: () => setAddToCollectionModalOpen(false),
 		}),
 		[
 			selectedImageIds,
@@ -113,6 +122,7 @@ export const LibrarySelectionProvider = ({
 			togglePalette,
 			clearSelection,
 			createGroupModalOpen,
+			addToCollectionModalOpen,
 		]
 	);
 

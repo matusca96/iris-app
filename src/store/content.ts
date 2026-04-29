@@ -67,6 +67,11 @@ type ContentActions = {
 		name: string,
 		input: { imageIds: string[]; paletteIds: string[] }
 	) => Group;
+	/** Appends an existing group's id to `groupIds` on the given images/palettes (deduped). Unknown ids are skipped. Returns null if the group does not exist. */
+	assignItemsToGroup: (
+		groupId: string,
+		input: { imageIds: string[]; paletteIds: string[] }
+	) => Group | null;
 };
 
 export type ContentStore = ContentState & ContentActions;
@@ -310,6 +315,43 @@ export const useContentStore = create<ContentStore>()(
 						return {
 							...palette,
 							groupIds: [...palette.groupIds, group.id],
+						};
+					}),
+				}));
+
+				return group;
+			},
+			assignItemsToGroup: (groupId, { imageIds, paletteIds }) => {
+				const group = get().groups.find((g) => g.id === groupId) ?? null;
+				if (!group) {
+					return null;
+				}
+				const imageTargetIds = new Set(imageIds);
+				const paletteTargetIds = new Set(paletteIds);
+
+				set((state) => ({
+					images: state.images.map((image) => {
+						if (!imageTargetIds.has(image.id)) {
+							return image;
+						}
+						if (image.groupIds.includes(groupId)) {
+							return image;
+						}
+						return {
+							...image,
+							groupIds: [...image.groupIds, groupId],
+						};
+					}),
+					palettes: state.palettes.map((palette) => {
+						if (!paletteTargetIds.has(palette.id)) {
+							return palette;
+						}
+						if (palette.groupIds.includes(groupId)) {
+							return palette;
+						}
+						return {
+							...palette,
+							groupIds: [...palette.groupIds, groupId],
 						};
 					}),
 				}));

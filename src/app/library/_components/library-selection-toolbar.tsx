@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useContentStore } from "@/store/content";
 import { useLibrarySelection } from "../_context/library-selection-context";
 
 const EXIT_MS = 200;
@@ -15,7 +16,11 @@ export const LibrarySelectionToolbar = () => {
 		selectedPaletteCount,
 		clearSelection,
 		openCreateGroupModal,
+		openAddToCollectionModal,
 	} = useLibrarySelection();
+
+	const collectionCount = useContentStore((s) => s.groups.length);
+	const canAddToExistingCollection = collectionCount > 0;
 
 	const visible = totalSelectedCount > 0;
 	const [mounted, setMounted] = useState(visible);
@@ -74,9 +79,22 @@ export const LibrarySelectionToolbar = () => {
 					<span className="font-medium text-foreground">{summary}</span>
 					<span className="text-muted-foreground"> selecionada(s)</span>
 				</p>
-				<div className="flex shrink-0 items-center gap-2">
+				<div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
 					<Button onClick={clearSelection} type="button" variant="ghost">
 						Limpar
+					</Button>
+					<Button
+						disabled={!canAddToExistingCollection}
+						onClick={openAddToCollectionModal}
+						title={
+							canAddToExistingCollection
+								? undefined
+								: "Crie uma coleção na página Coleções antes de adicionar itens a uma existente."
+						}
+						type="button"
+						variant="secondary"
+					>
+						Adicionar à coleção
 					</Button>
 					<Button onClick={openCreateGroupModal} type="button">
 						Criar coleção

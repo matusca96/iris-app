@@ -7,6 +7,7 @@ import { parseAsStringLiteral, useQueryState } from "nuqs";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddImageModal } from "./_components/add-image-modal/add-image-modal";
 import { AddPaletteModal } from "./_components/add-palette-modal/add-palette-modal";
+import { AddToCollectionFromSelectionModal } from "./_components/add-to-collection-from-selection-modal";
 import { ColorPalettesTab } from "./_components/color-palettes-tab";
 import { CreateGroupFromSelectionModal } from "./_components/create-group-from-selection-modal";
 import { ImagesTab } from "./_components/images-tab";
@@ -53,6 +54,7 @@ export default function LibraryPage() {
 				/>
 			</div>
 			<LibrarySelectionToolbar />
+			<AddToCollectionFromSelectionModal />
 			<CreateGroupFromSelectionModal />
 		</LibrarySelectionProvider>
 	);

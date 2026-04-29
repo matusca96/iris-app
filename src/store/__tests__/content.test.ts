@@ -205,4 +205,51 @@ describe("useContentStore", () => {
 
 		expect(useContentStore.getState().images[0]?.groupIds).toEqual([group.id]);
 	});
+
+	it("assignItemsToGroup merges groupIds for an existing group", () => {
+		const { addImage, addPalette, addGroup, assignItemsToGroup } =
+			useContentStore.getState();
+		const group = addGroup("Minha coleção");
+		const img = addImage(imagePayload);
+		const pal = addPalette(palettePayload);
+
+		const result = assignItemsToGroup(group.id, {
+			imageIds: [img.id],
+			paletteIds: [pal.id],
+		});
+
+		expect(result).toEqual(group);
+		expect(useContentStore.getState().images[0]?.groupIds).toEqual([group.id]);
+		expect(useContentStore.getState().palettes[0]?.groupIds).toEqual([
+			group.id,
+		]);
+	});
+
+	it("assignItemsToGroup returns null for unknown group id", () => {
+		const { addImage, assignItemsToGroup } = useContentStore.getState();
+		const img = addImage(imagePayload);
+
+		const result = assignItemsToGroup("nonexistent-id", {
+			imageIds: [img.id],
+			paletteIds: [],
+		});
+
+		expect(result).toBeNull();
+		expect(useContentStore.getState().images[0]?.groupIds).toEqual([]);
+	});
+
+	it("assignItemsToGroup dedupes and skips unknown item ids", () => {
+		const { addImage, addGroup, assignItemsToGroup } =
+			useContentStore.getState();
+		const group = addGroup("G");
+		const img = addImage({ ...imagePayload, groupIds: [group.id] });
+
+		const result = assignItemsToGroup(group.id, {
+			imageIds: [img.id, "missing"],
+			paletteIds: [],
+		});
+
+		expect(result?.id).toBe(group.id);
+		expect(useContentStore.getState().images[0]?.groupIds).toEqual([group.id]);
+	});
 });
