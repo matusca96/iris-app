@@ -87,7 +87,9 @@ export const CreateGroupFromSelectionModal = () => {
 		<Dialog onOpenChange={onOpenChange} open={createGroupModalOpen}>
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Nova coleção</DialogTitle>
+					<DialogTitle className="font-medium text-xl">
+						Nova coleção
+					</DialogTitle>
 					<DialogDescription>
 						Os itens selecionados serão associados a esta coleção.
 					</DialogDescription>
