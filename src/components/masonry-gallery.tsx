@@ -18,6 +18,8 @@ export type MasonryGalleryItemBase = {
 type MasonryGalleryProps<T extends MasonryGalleryItemBase> = {
 	items: T[];
 	onItemClick?: (item: T) => void;
+	/** When provided, adds selected ring when true (e.g. bulk selection). */
+	isTileSelected?: (item: T) => boolean;
 	renderOverlay?: (item: T) => React.ReactNode;
 	getItemAriaLabel?: (item: T) => string;
 	className?: string;
@@ -64,6 +66,7 @@ const MasonrySkeleton = ({
 export const MasonryGallery = <T extends MasonryGalleryItemBase>({
 	items,
 	onItemClick,
+	isTileSelected,
 	renderOverlay,
 	getItemAriaLabel,
 	className,
@@ -150,35 +153,48 @@ export const MasonryGallery = <T extends MasonryGalleryItemBase>({
 
 	return (
 		<div className={cn(columnsClassName, gapClassName, className)}>
-			{items.map((item) => (
-				<div
-					className={cn("mb-2 break-inside-avoid", itemClassName)}
-					key={item.id}
-				>
-					<button
-						aria-label={getItemAriaLabel?.(item)}
-						className="group relative block w-full cursor-pointer overflow-hidden rounded-md bg-muted text-left outline-none transition hover:scale-102 hover:border-border hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring"
-						onClick={() => onItemClick?.(item)}
-						type="button"
+			{items.map((item) => {
+				const selected = isTileSelected?.(item) ?? false;
+				return (
+					<div
+						className={cn(
+							"relative mb-2 break-inside-avoid",
+							renderOverlay && "group/tile",
+							itemClassName
+						)}
+						key={item.id}
 					>
-						<Image
-							alt={item.alt ?? ""}
-							className="h-auto w-full object-cover"
-							height={loadedMetaById[item.id]?.height ?? 1}
-							loading="lazy"
-							src={item.imageUrl}
-							unoptimized
-							width={loadedMetaById[item.id]?.width ?? 1}
-						/>
+						<button
+							aria-label={getItemAriaLabel?.(item)}
+							className={cn(
+								"group relative block w-full cursor-pointer overflow-hidden rounded-md bg-muted text-left outline-none transition hover:scale-102 hover:border-border hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring",
+								selected &&
+									"ring-2 ring-primary/70 ring-offset-0 ring-offset-background"
+							)}
+							onClick={() => onItemClick?.(item)}
+							type="button"
+						>
+							<Image
+								alt={item.alt ?? ""}
+								className="h-auto w-full object-cover"
+								height={loadedMetaById[item.id]?.height ?? 1}
+								loading="lazy"
+								src={item.imageUrl}
+								unoptimized
+								width={loadedMetaById[item.id]?.width ?? 1}
+							/>
 
-						{renderOverlay ? (
-							<div className="pointer-events-none absolute inset-0 flex items-end bg-linear-to-t from-black/80 via-black/80 to-transparent opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
-								<div className="w-full p-2">{renderOverlay(item)}</div>
-							</div>
-						) : null}
-					</button>
-				</div>
-			))}
+							{renderOverlay ? (
+								<div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+									<div className="relative h-full w-full bg-linear-to-t from-black/80 via-black/80 to-transparent">
+										{renderOverlay(item)}
+									</div>
+								</div>
+							) : null}
+						</button>
+					</div>
+				);
+			})}
 		</div>
 	);
 };

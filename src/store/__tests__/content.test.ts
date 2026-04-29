@@ -149,4 +149,60 @@ describe("useContentStore", () => {
 		deleteComment("images", image.id, commentId);
 		expect(useContentStore.getState().images[0]?.comments).toEqual([]);
 	});
+
+	it("createGroupAndAssignToItems creates group and merges groupIds", () => {
+		const { addImage, addPalette, createGroupAndAssignToItems } =
+			useContentStore.getState();
+		const img = addImage(imagePayload);
+		const pal = addPalette(palettePayload);
+
+		const group = createGroupAndAssignToItems("Nova coleção", {
+			imageIds: [img.id],
+			paletteIds: [pal.id],
+		});
+
+		expect(useContentStore.getState().groups).toContainEqual(group);
+		expect(useContentStore.getState().images[0]?.groupIds).toEqual([group.id]);
+		expect(useContentStore.getState().palettes[0]?.groupIds).toEqual([
+			group.id,
+		]);
+	});
+
+	it("createGroupAndAssignToItems dedupes existing groupIds and skips unknown ids", () => {
+		const { addImage, addPalette, addGroup, createGroupAndAssignToItems } =
+			useContentStore.getState();
+		const existing = addGroup("Existing");
+		const img = addImage({
+			...imagePayload,
+			groupIds: [existing.id],
+		});
+		const pal = addPalette(palettePayload);
+
+		const group = createGroupAndAssignToItems("Second", {
+			imageIds: [img.id, "unknown-image-id"],
+			paletteIds: [pal.id],
+		});
+
+		expect(useContentStore.getState().images[0]?.groupIds).toEqual([
+			existing.id,
+			group.id,
+		]);
+		expect(useContentStore.getState().palettes[0]?.groupIds).toEqual([
+			group.id,
+		]);
+		expect(useContentStore.getState().images).toHaveLength(1);
+	});
+
+	it("createGroupAndAssignToItems ignores duplicate ids in input arrays", () => {
+		const { addImage, createGroupAndAssignToItems } =
+			useContentStore.getState();
+		const img = addImage(imagePayload);
+
+		const group = createGroupAndAssignToItems("Once", {
+			imageIds: [img.id, img.id],
+			paletteIds: [],
+		});
+
+		expect(useContentStore.getState().images[0]?.groupIds).toEqual([group.id]);
+	});
 });

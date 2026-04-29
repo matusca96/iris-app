@@ -8,7 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AddImageModal } from "./_components/add-image-modal/add-image-modal";
 import { AddPaletteModal } from "./_components/add-palette-modal/add-palette-modal";
 import { ColorPalettesTab } from "./_components/color-palettes-tab";
+import { CreateGroupFromSelectionModal } from "./_components/create-group-from-selection-modal";
 import { ImagesTab } from "./_components/images-tab";
+import { LibrarySelectionToolbar } from "./_components/library-selection-toolbar";
+import { LibrarySelectionProvider } from "./_context/library-selection-context";
 
 const modalParser = parseAsStringLiteral(["add-image", "add-palette"]);
 
@@ -19,32 +22,39 @@ export default function LibraryPage() {
 	);
 
 	return (
-		<div className="mt-2 flex max-w-full overflow-x-hidden">
-			<Tabs className="min-w-0 max-w-full flex-1">
-				<TabsList className="w-full">
-					<TabsTrigger value="images">
-						<HugeiconsIcon icon={ImageIcon} /> Imagens
-					</TabsTrigger>
-					<TabsTrigger value="palettes">
-						<HugeiconsIcon icon={PaintBoardIcon} /> Paletas de cores
-					</TabsTrigger>
-				</TabsList>
-				<TabsContent className="max-w-full overflow-x-hidden" value="images">
-					<ImagesTab onAddImage={() => setModal("add-image")} />
-				</TabsContent>
-				<TabsContent className="max-w-full overflow-x-hidden" value="palettes">
-					<ColorPalettesTab onAddPalette={() => setModal("add-palette")} />
-				</TabsContent>
-			</Tabs>
-			<AddImageModal
-				onOpenChange={(open) => setModal(open ? "add-image" : null)}
-				open={modal === "add-image"}
-			/>
-			<AddPaletteModal
-				onOpenChange={(open) => setModal(open ? "add-palette" : null)}
-				open={modal === "add-palette"}
-			/>
-		</div>
+		<LibrarySelectionProvider>
+			<div className="mt-2 flex max-w-full overflow-x-hidden pb-28">
+				<Tabs className="min-w-0 max-w-full flex-1">
+					<TabsList className="w-full">
+						<TabsTrigger value="images">
+							<HugeiconsIcon icon={ImageIcon} /> Imagens
+						</TabsTrigger>
+						<TabsTrigger value="palettes">
+							<HugeiconsIcon icon={PaintBoardIcon} /> Paletas de cores
+						</TabsTrigger>
+					</TabsList>
+					<TabsContent className="max-w-full overflow-x-hidden" value="images">
+						<ImagesTab onAddImage={() => setModal("add-image")} />
+					</TabsContent>
+					<TabsContent
+						className="max-w-full overflow-x-hidden"
+						value="palettes"
+					>
+						<ColorPalettesTab onAddPalette={() => setModal("add-palette")} />
+					</TabsContent>
+				</Tabs>
+				<AddImageModal
+					onOpenChange={(open) => setModal(open ? "add-image" : null)}
+					open={modal === "add-image"}
+				/>
+				<AddPaletteModal
+					onOpenChange={(open) => setModal(open ? "add-palette" : null)}
+					open={modal === "add-palette"}
+				/>
+			</div>
+			<LibrarySelectionToolbar />
+			<CreateGroupFromSelectionModal />
+		</LibrarySelectionProvider>
 	);
 }
 

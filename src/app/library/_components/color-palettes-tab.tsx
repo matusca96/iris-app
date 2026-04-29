@@ -8,6 +8,7 @@ import { EmptyTabContent } from "@/components/empty-tab-content";
 import { PalettePreviewRow } from "@/components/palette-preview-row";
 import { Button } from "@/components/ui/button";
 import { useContentStore } from "@/store/content";
+import { useLibrarySelection } from "../_context/library-selection-context";
 
 type ColorPalettesTabProps = {
 	onAddPalette: () => void;
@@ -15,6 +16,7 @@ type ColorPalettesTabProps = {
 
 export const ColorPalettesTab = ({ onAddPalette }: ColorPalettesTabProps) => {
 	const { palettes, tags } = useContentStore();
+	const { togglePalette, selectedPaletteIds } = useLibrarySelection();
 
 	const tagById = useMemo(
 		() => new Map(tags.map((tag) => [tag.id, tag] as const)),
@@ -30,7 +32,7 @@ export const ColorPalettesTab = ({ onAddPalette }: ColorPalettesTabProps) => {
 				</Button>
 			</div>
 
-			<div className="grid grid-cols-1 gap-4 overflow-x-hidden pb-2 md:grid-cols-2">
+			<div className="grid grid-cols-1 gap-4 overflow-x-hidden p-2 md:grid-cols-2">
 				{palettes.map((palette) => {
 					const resolvedTags = palette.tags
 						.map((tagId) => tagById.get(tagId))
@@ -46,7 +48,9 @@ export const ColorPalettesTab = ({ onAddPalette }: ColorPalettesTabProps) => {
 							onClick={() => {
 								/* TODO: wire palette details modal */
 							}}
+							onSelectionToggle={() => togglePalette(palette.id)}
 							paletteId={palette.id}
+							selected={selectedPaletteIds.has(palette.id)}
 							tags={resolvedTags}
 						/>
 					);

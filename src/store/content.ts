@@ -62,6 +62,11 @@ type ContentActions = {
 		entityId: string,
 		commentId: string
 	) => void;
+	/** Creates a group and appends its id to `groupIds` on the given images/palettes (deduped). Unknown ids are skipped. */
+	createGroupAndAssignToItems: (
+		name: string,
+		input: { imageIds: string[]; paletteIds: string[] }
+	) => Group;
 };
 
 export type ContentStore = ContentState & ContentActions;
@@ -275,6 +280,41 @@ export const useContentStore = create<ContentStore>()(
 							: palette
 					),
 				}));
+			},
+			createGroupAndAssignToItems: (name, { imageIds, paletteIds }) => {
+				const group: Group = { id: crypto.randomUUID(), name };
+				const imageTargetIds = new Set(imageIds);
+				const paletteTargetIds = new Set(paletteIds);
+
+				set((state) => ({
+					groups: [...state.groups, group],
+					images: state.images.map((image) => {
+						if (!imageTargetIds.has(image.id)) {
+							return image;
+						}
+						if (image.groupIds.includes(group.id)) {
+							return image;
+						}
+						return {
+							...image,
+							groupIds: [...image.groupIds, group.id],
+						};
+					}),
+					palettes: state.palettes.map((palette) => {
+						if (!paletteTargetIds.has(palette.id)) {
+							return palette;
+						}
+						if (palette.groupIds.includes(group.id)) {
+							return palette;
+						}
+						return {
+							...palette,
+							groupIds: [...palette.groupIds, group.id],
+						};
+					}),
+				}));
+
+				return group;
 			},
 		}),
 		{

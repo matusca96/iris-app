@@ -1,9 +1,14 @@
 /** @vitest-environment jsdom */
 
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LibrarySelectionProvider } from "../../_context/library-selection-context";
 import { ColorPalettesTab } from "../color-palettes-tab";
+
+const renderWithSelection = (ui: ReactElement) =>
+	render(<LibrarySelectionProvider>{ui}</LibrarySelectionProvider>);
 
 const OVERFLOW_PALETTE_EDIT_RE = /Editar paleta Overflow palette/;
 const RESPONSIVE_PALETTE_EDIT_RE = /Editar paleta Responsive palette/;
@@ -41,7 +46,7 @@ describe("ColorPalettesTab", () => {
 	afterEach(() => cleanup());
 
 	it("renders empty state when there are no palettes", () => {
-		render(<ColorPalettesTab onAddPalette={vi.fn()} />);
+		renderWithSelection(<ColorPalettesTab onAddPalette={vi.fn()} />);
 
 		expect(
 			screen.getByText("Ainda não há nenhuma paleta de cores por aqui.")
@@ -66,7 +71,7 @@ describe("ColorPalettesTab", () => {
 			tags: [],
 		});
 
-		render(<ColorPalettesTab onAddPalette={vi.fn()} />);
+		renderWithSelection(<ColorPalettesTab onAddPalette={vi.fn()} />);
 
 		expect(screen.getByText("Warm")).toBeInTheDocument();
 		expect(screen.getByText("Cool")).toBeInTheDocument();
@@ -87,7 +92,7 @@ describe("ColorPalettesTab", () => {
 			tags: [tagA.id, tagB.id, tagC.id],
 		});
 
-		render(<ColorPalettesTab onAddPalette={vi.fn()} />);
+		renderWithSelection(<ColorPalettesTab onAddPalette={vi.fn()} />);
 
 		expect(screen.getByText("Primary")).toBeInTheDocument();
 		expect(screen.getByText("Accent")).toBeInTheDocument();
@@ -110,7 +115,7 @@ describe("ColorPalettesTab", () => {
 			tags: [],
 		});
 
-		render(<ColorPalettesTab onAddPalette={vi.fn()} />);
+		renderWithSelection(<ColorPalettesTab onAddPalette={vi.fn()} />);
 
 		expect(
 			screen.getByRole("button", {
