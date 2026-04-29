@@ -19,8 +19,8 @@ export default function LibraryPage() {
 	);
 
 	return (
-		<div className="mt-2 flex">
-			<Tabs className="flex-1">
+		<div className="mt-2 flex max-w-full overflow-x-hidden">
+			<Tabs className="min-w-0 max-w-full flex-1">
 				<TabsList className="w-full">
 					<TabsTrigger value="images">
 						<HugeiconsIcon icon={ImageIcon} /> Imagens
@@ -29,10 +29,10 @@ export default function LibraryPage() {
 						<HugeiconsIcon icon={PaintBoardIcon} /> Paletas de cores
 					</TabsTrigger>
 				</TabsList>
-				<TabsContent value="images">
+				<TabsContent className="max-w-full overflow-x-hidden" value="images">
 					<ImagesTab onAddImage={() => setModal("add-image")} />
 				</TabsContent>
-				<TabsContent value="palettes">
+				<TabsContent className="max-w-full overflow-x-hidden" value="palettes">
 					<ColorPalettesTab onAddPalette={() => setModal("add-palette")} />
 				</TabsContent>
 			</Tabs>
