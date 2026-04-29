@@ -37,7 +37,7 @@ vi.mock("../preview-panel", () => ({
 	PreviewPanel: () => <div data-testid="preview-panel-mock" />,
 }));
 
-vi.mock("../tag-selector", () => ({
+vi.mock("@/components/tag-selector", () => ({
 	TagSelector: ({
 		onTagsChange,
 	}: {

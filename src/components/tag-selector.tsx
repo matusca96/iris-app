@@ -7,6 +7,15 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { KeyboardEvent } from "react";
 import { useMemo, useRef } from "react";
 
+import {
+	canCreateTagFromQuery,
+	DEFAULT_NEW_TAG_COLOR,
+	findTagByNormalizedName,
+	NEW_TAG_ID_PREFIX,
+	normalizeTagName,
+	TAG_COLOR_OPTIONS,
+	type TagOption,
+} from "@/app/library/_components/add-image-modal/add-image-modal.helpers";
 import { Button } from "@/components/ui/button";
 import {
 	Combobox,
@@ -35,15 +44,6 @@ import {
 import type { Tag } from "@/lib/storage/schemas";
 import { cn } from "@/lib/utils";
 import { useContentStore } from "@/store/content";
-import {
-	canCreateTagFromQuery,
-	DEFAULT_NEW_TAG_COLOR,
-	findTagByNormalizedName,
-	NEW_TAG_ID_PREFIX,
-	normalizeTagName,
-	TAG_COLOR_OPTIONS,
-	type TagOption,
-} from "./add-image-modal.helpers";
 
 type TagSelectorProps = {
 	selectedTags: TagOption[];

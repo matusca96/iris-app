@@ -3,7 +3,11 @@
 import { EmptyTabContent } from "@/components/empty-tab-content";
 import { useContentStore } from "@/store/content";
 
-export const ColorPalettesTab = () => {
+type ColorPalettesTabProps = {
+	onAddPalette: () => void;
+};
+
+export const ColorPalettesTab = ({ onAddPalette }: ColorPalettesTabProps) => {
 	const { palettes } = useContentStore();
 
 	return palettes.length ? (
@@ -12,9 +16,7 @@ export const ColorPalettesTab = () => {
 		<EmptyTabContent
 			buttonText="Adicionar paleta de cores"
 			description="Ainda não há nenhuma paleta de cores por aqui."
-			onAdd={() => {
-				console.log("add palette");
-			}}
+			onAdd={onAddPalette}
 		/>
 	);
 };

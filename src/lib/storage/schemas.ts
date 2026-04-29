@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-const oklchColorRegex = /^oklch\(\d+(\.\d+)?%?\s+\d+(\.\d+)?\s+\d+(\.\d+)?\)$/;
+/** Matches canonical `oklch(L C H)` strings used for palette colors (display/storage). */
+export const oklchColorRegex =
+	/^oklch\(\d+(\.\d+)?%?\s+\d+(\.\d+)?\s+\d+(\.\d+)?\)$/;
 const hexColorRegex = /^#(?:[\da-fA-F]{3}|[\da-fA-F]{6})$/;
 
 export const CommentSchema = z.object({

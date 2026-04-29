@@ -11,9 +11,12 @@ export default defineConfig({
 	test: {
 		environment: "node",
 		setupFiles: ["./vitest.setup.ts"],
-		environmentMatchGlobs: [
-			["**/*.test.tsx", "jsdom"],
-			["**/__tests__/**/*.tsx", "jsdom"],
-		],
+		/** @see https://vitest.dev/config/#environmentmatchglobs supported at runtime */
+		...({
+			environmentMatchGlobs: [
+				["**/*.test.tsx", "jsdom"],
+				["**/__tests__/**/*.tsx", "jsdom"],
+			],
+		} satisfies Record<string, unknown>),
 	},
 });

@@ -10,6 +10,8 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { GroupSelector } from "@/components/group-selector";
+import { TagSelector } from "@/components/tag-selector";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -36,9 +38,7 @@ import {
 	type AddImageFormValues,
 	addImageFormSchema,
 } from "./add-image-modal.schema";
-import { GroupSelector } from "./group-selector";
 import { PreviewPanel } from "./preview-panel";
-import { TagSelector } from "./tag-selector";
 import { useImagePreview } from "./use-image-preview";
 
 type AddImageModalProps = {
