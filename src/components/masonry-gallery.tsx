@@ -21,6 +21,8 @@ type MasonryGalleryProps<T extends MasonryGalleryItemBase> = {
 	/** When provided, adds selected ring when true (e.g. bulk selection). */
 	isTileSelected?: (item: T) => boolean;
 	renderOverlay?: (item: T) => React.ReactNode;
+	/** Renders below the image; always visible (not tied to hover). */
+	renderFooter?: (item: T) => React.ReactNode;
 	getItemAriaLabel?: (item: T) => string;
 	className?: string;
 	columnsClassName?: string;
@@ -68,6 +70,7 @@ export const MasonryGallery = <T extends MasonryGalleryItemBase>({
 	onItemClick,
 	isTileSelected,
 	renderOverlay,
+	renderFooter,
 	getItemAriaLabel,
 	className,
 	columnsClassName = "columns-1 sm:columns-2 lg:columns-3 xl:columns-4",
@@ -155,44 +158,66 @@ export const MasonryGallery = <T extends MasonryGalleryItemBase>({
 		<div className={cn(columnsClassName, gapClassName, className)}>
 			{items.map((item) => {
 				const selected = isTileSelected?.(item) ?? false;
+				const hasFooter = Boolean(renderFooter);
+				const hasChrome = Boolean(renderOverlay) || hasFooter;
+
 				return (
-					<div
+					<article
+						aria-label={getItemAriaLabel?.(item)}
 						className={cn(
-							"relative mb-2 break-inside-avoid",
-							renderOverlay && "group/tile",
+							"mb-2 break-inside-avoid overflow-hidden rounded-md",
+							hasChrome && "group/tile",
+							selected &&
+								"ring-2 ring-primary/70 ring-offset-0 ring-offset-background",
 							itemClassName
 						)}
 						key={item.id}
 					>
-						<button
-							aria-label={getItemAriaLabel?.(item)}
+						{/* Selection hit area: pointer-only; keyboard users use the tile checkbox. */}
+						{/* biome-ignore lint/a11y/noStaticElementInteractions: card grid selection surface */}
+						{/* biome-ignore lint/a11y/noNoninteractiveElementInteractions: card grid selection surface */}
+						{/* biome-ignore lint/a11y/useKeyWithClickEvents: keyboard selection via overlay checkbox */}
+						<div
 							className={cn(
-								"group relative block w-full cursor-pointer overflow-hidden rounded-md bg-muted text-left outline-none transition hover:scale-102 hover:border-border hover:shadow-sm focus-visible:ring-2 focus-visible:ring-ring",
-								selected &&
-									"ring-2 ring-primary/70 ring-offset-0 ring-offset-background"
+								"flex flex-col overflow-hidden rounded-md bg-muted text-left outline-none transition hover:shadow-sm",
+								onItemClick && "cursor-pointer"
 							)}
-							onClick={() => onItemClick?.(item)}
-							type="button"
+							onClick={
+								onItemClick
+									? (e) => {
+											const target = e.target as Element | null;
+											if (target?.closest("[data-tile-control]")) {
+												return;
+											}
+											onItemClick(item);
+										}
+									: undefined
+							}
 						>
-							<Image
-								alt={item.alt ?? ""}
-								className="h-auto w-full object-cover"
-								height={loadedMetaById[item.id]?.height ?? 1}
-								loading="lazy"
-								src={item.imageUrl}
-								unoptimized
-								width={loadedMetaById[item.id]?.width ?? 1}
-							/>
-
-							{renderOverlay ? (
-								<div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
-									<div className="relative h-full w-full bg-linear-to-t from-black/80 via-black/80 to-transparent">
-										{renderOverlay(item)}
-									</div>
-								</div>
+							<div
+								className={cn(
+									"relative w-full overflow-hidden bg-muted",
+									hasFooter ? "rounded-t-md" : "rounded-md"
+								)}
+							>
+								<Image
+									alt={item.alt ?? ""}
+									className="h-auto w-full object-cover"
+									height={loadedMetaById[item.id]?.height ?? 1}
+									loading="lazy"
+									src={item.imageUrl}
+									unoptimized
+									width={loadedMetaById[item.id]?.width ?? 1}
+								/>
+								{renderOverlay ? (
+									<div className="absolute inset-0">{renderOverlay(item)}</div>
+								) : null}
+							</div>
+							{renderFooter ? (
+								<div className="shrink-0">{renderFooter(item)}</div>
 							) : null}
-						</button>
-					</div>
+						</div>
+					</article>
 				);
 			})}
 		</div>

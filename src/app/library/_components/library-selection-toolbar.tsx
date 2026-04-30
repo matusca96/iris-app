@@ -68,18 +68,18 @@ export const LibrarySelectionToolbar = () => {
 		>
 			<div
 				className={cn(
-					"pointer-events-auto flex w-full max-w-lg items-center justify-between gap-3 rounded-xl border border-border bg-popover px-4 py-3 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-200",
+					"pointer-events-auto flex w-max min-w-0 max-w-full flex-col items-center justify-between gap-3 rounded-xl border border-border bg-popover px-4 py-3 text-popover-foreground shadow-lg ring-1 ring-foreground/10 duration-200 md:flex-row md:items-center md:justify-start md:gap-3",
 					exiting
 						? "fade-out-0 slide-out-to-bottom-2 animate-out"
 						: "fade-in-0 slide-in-from-bottom-2 animate-in",
 					"motion-reduce:animate-none motion-reduce:opacity-100"
 				)}
 			>
-				<p className="min-w-0 text-sm">
+				<p className="min-w-0 text-center text-sm md:shrink-0 md:whitespace-nowrap md:text-left">
 					<span className="font-medium text-foreground">{summary}</span>
 					<span className="text-muted-foreground"> selecionada(s)</span>
 				</p>
-				<div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+				<div className="flex items-center justify-end gap-2">
 					<Button onClick={clearSelection} type="button" variant="ghost">
 						Limpar
 					</Button>
