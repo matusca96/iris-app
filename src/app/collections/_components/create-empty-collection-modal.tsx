@@ -54,25 +54,30 @@ export const CreateEmptyCollectionModal = ({
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent>
-				<DialogHeader>
+			<DialogContent className="flex max-h-[min(90vh,560px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+				<DialogHeader className="shrink-0 border-border border-b px-6 pt-6 pb-4">
 					<DialogTitle className="font-medium text-lg">
 						Criar coleção vazia
 					</DialogTitle>
 					<DialogDescription>Dê um nome à coleção.</DialogDescription>
 				</DialogHeader>
-				<form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
-					<Field data-invalid={Boolean(form.formState.errors.name)}>
-						<FieldLabel htmlFor="empty-collection-name">Nome</FieldLabel>
-						<Input
-							autoComplete="off"
-							id="empty-collection-name"
-							placeholder="Ex.: Campanha verão"
-							{...form.register("name")}
-						/>
-						<FieldError errors={[form.formState.errors.name]} />
-					</Field>
-					<DialogFooter>
+				<form
+					className="flex min-h-0 flex-1 flex-col overflow-hidden"
+					onSubmit={form.handleSubmit(onSubmit)}
+				>
+					<div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+						<Field data-invalid={Boolean(form.formState.errors.name)}>
+							<FieldLabel htmlFor="empty-collection-name">Nome</FieldLabel>
+							<Input
+								autoComplete="off"
+								id="empty-collection-name"
+								placeholder="Ex.: Campanha verão"
+								{...form.register("name")}
+							/>
+							<FieldError errors={[form.formState.errors.name]} />
+						</Field>
+					</div>
+					<DialogFooter className="shrink-0 border-border border-t px-6 py-4">
 						<Button
 							onClick={() => onOpenChange(false)}
 							type="button"

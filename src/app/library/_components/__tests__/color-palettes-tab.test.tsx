@@ -10,8 +10,8 @@ import { ColorPalettesTab } from "../color-palettes-tab";
 const renderWithSelection = (ui: ReactElement) =>
 	render(<LibrarySelectionProvider>{ui}</LibrarySelectionProvider>);
 
-const OVERFLOW_PALETTE_EDIT_RE = /Editar paleta Overflow palette/;
-const RESPONSIVE_PALETTE_EDIT_RE = /Editar paleta Responsive palette/;
+const OVERFLOW_PALETTE_MENU_RE = /Ações para Overflow palette/;
+const RESPONSIVE_PALETTE_MENU_RE = /Ações para Responsive palette/;
 
 const makeColors = (count: number) =>
 	Array.from(
@@ -46,7 +46,9 @@ describe("ColorPalettesTab", () => {
 	afterEach(() => cleanup());
 
 	it("renders empty state when there are no palettes", () => {
-		renderWithSelection(<ColorPalettesTab onAddPalette={vi.fn()} />);
+		renderWithSelection(
+			<ColorPalettesTab onAddPalette={vi.fn()} onEditPalette={vi.fn()} />
+		);
 
 		expect(
 			screen.getByText("Ainda não há nenhuma paleta de cores por aqui.")
@@ -71,7 +73,9 @@ describe("ColorPalettesTab", () => {
 			tags: [],
 		});
 
-		renderWithSelection(<ColorPalettesTab onAddPalette={vi.fn()} />);
+		renderWithSelection(
+			<ColorPalettesTab onAddPalette={vi.fn()} onEditPalette={vi.fn()} />
+		);
 
 		expect(screen.getByText("Warm")).toBeInTheDocument();
 		expect(screen.getByText("Cool")).toBeInTheDocument();
@@ -92,7 +96,9 @@ describe("ColorPalettesTab", () => {
 			tags: [tagA.id, tagB.id, tagC.id],
 		});
 
-		renderWithSelection(<ColorPalettesTab onAddPalette={vi.fn()} />);
+		renderWithSelection(
+			<ColorPalettesTab onAddPalette={vi.fn()} onEditPalette={vi.fn()} />
+		);
 
 		expect(screen.getByText("Primary")).toBeInTheDocument();
 		expect(screen.getByText("Accent")).toBeInTheDocument();
@@ -100,7 +106,7 @@ describe("ColorPalettesTab", () => {
 		expect(screen.getByText("+1 more")).toBeInTheDocument();
 		expect(
 			screen.getByRole("button", {
-				name: OVERFLOW_PALETTE_EDIT_RE,
+				name: OVERFLOW_PALETTE_MENU_RE,
 			})
 		).toBeInTheDocument();
 	});
@@ -115,18 +121,20 @@ describe("ColorPalettesTab", () => {
 			tags: [],
 		});
 
-		renderWithSelection(<ColorPalettesTab onAddPalette={vi.fn()} />);
+		renderWithSelection(
+			<ColorPalettesTab onAddPalette={vi.fn()} onEditPalette={vi.fn()} />
+		);
 
 		expect(
 			screen.getByRole("button", {
-				name: RESPONSIVE_PALETTE_EDIT_RE,
+				name: RESPONSIVE_PALETTE_MENU_RE,
 			})
 		).toBeInTheDocument();
 
 		setViewport(1100);
 		expect(
 			screen.getByRole("button", {
-				name: RESPONSIVE_PALETTE_EDIT_RE,
+				name: RESPONSIVE_PALETTE_MENU_RE,
 			})
 		).toBeInTheDocument();
 	});

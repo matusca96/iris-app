@@ -28,7 +28,6 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import { Separator } from "@/components/ui/separator";
 import { mergeModalGroupIds } from "@/lib/merge-modal-group-ids";
 import { useContentStore } from "@/store/content";
 import {
@@ -137,10 +136,14 @@ export const AddImageModal = ({
 		return "Adicionar imagem";
 	};
 	const dialogTitle = getDialogTitle();
+	const isEditMode = Boolean(initialValues?.id);
 
 	const validateBeforeSubmit = async (values: AddImageFormValues) => {
 		const trimmedName = values.name.trim();
 		const trimmedUrl = values.url.trim();
+		if (isEditMode) {
+			return { trimmedName, trimmedUrl };
+		}
 		const status = await checkImageUrl(trimmedUrl);
 		if (status !== "preview-ready") {
 			form.setError("url", {
@@ -188,7 +191,6 @@ export const AddImageModal = ({
 		if (initialValues?.id) {
 			updateImage(initialValues.id, {
 				name: validated.trimmedName,
-				url: validated.trimmedUrl,
 				groupIds: gids,
 				tags: nextTagIds,
 			});
@@ -205,98 +207,112 @@ export const AddImageModal = ({
 	};
 
 	const disableSubmit =
-		form.formState.isSubmitting || previewStatus === "checking";
+		form.formState.isSubmitting ||
+		(!isEditMode && previewStatus === "checking");
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto p-0 sm:max-w-3xl">
-				<DialogHeader className="px-6 pt-6">
+			<DialogContent className="flex max-h-[90vh] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+				<DialogHeader className="shrink-0 border-border border-b px-6 pt-6 pb-4">
 					<DialogTitle className="text-xl">{dialogTitle}</DialogTitle>
 					<DialogDescription>
 						Insira a URL para validar e visualizar antes de salvar na
 						biblioteca.
 					</DialogDescription>
 				</DialogHeader>
-				<Separator />
 				<form
-					className="flex flex-col gap-5 px-6 pb-6"
+					className="flex min-h-0 flex-1 flex-col overflow-hidden"
 					onSubmit={form.handleSubmit(onSubmit)}
 				>
-					<div className="grid gap-5 md:grid-cols-2">
-						<div className="flex flex-col gap-4">
-							<Field data-invalid={!!form.formState.errors.url}>
-								<FieldLabel htmlFor="image-url">URL da imagem</FieldLabel>
-								<InputGroup aria-invalid={!!form.formState.errors.url}>
-									<InputGroupAddon>
-										<HugeiconsIcon icon={Link04Icon} />
-									</InputGroupAddon>
-									<InputGroupInput
-										id="image-url"
-										inputMode="url"
-										placeholder="https://exemplo.com/imagem.jpg"
-										{...form.register("url")}
-									/>
-								</InputGroup>
-								{previewStatus === "checking" ? (
-									<div className="flex items-center gap-1">
-										<HugeiconsIcon
-											className="size-4 animate-spin"
-											icon={Loading01Icon}
-										/>
-										<p className="text-muted-foreground text-xs">
-											Validando imagem...
-										</p>
-									</div>
-								) : null}
-								{previewStatus === "preview-ready" && previewUrl ? (
-									<div className="flex items-center gap-1">
-										<HugeiconsIcon
-											className="size-4 text-green-500"
-											icon={CheckmarkBadge01Icon}
-										/>
-										<p className="text-muted-foreground text-xs">URL válida.</p>
-									</div>
-								) : null}
+					<div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+						<div className="flex flex-col gap-5">
+							<div className="grid gap-5 md:grid-cols-2">
+								<div className="flex flex-col gap-4">
+									<Field
+										aria-disabled={isEditMode}
+										data-invalid={!!form.formState.errors.url}
+									>
+										<FieldLabel htmlFor="image-url">URL da imagem</FieldLabel>
+										<InputGroup aria-invalid={!!form.formState.errors.url}>
+											<InputGroupAddon>
+												<HugeiconsIcon icon={Link04Icon} />
+											</InputGroupAddon>
+											<InputGroupInput
+												disabled={isEditMode}
+												id="image-url"
+												inputMode="url"
+												placeholder="https://exemplo.com/imagem.jpg"
+												{...form.register("url")}
+											/>
+										</InputGroup>
+										{previewStatus === "checking" ? (
+											<div className="flex items-center gap-1">
+												<HugeiconsIcon
+													className="size-4 animate-spin"
+													icon={Loading01Icon}
+												/>
+												<p className="text-muted-foreground text-xs">
+													Validando imagem...
+												</p>
+											</div>
+										) : null}
+										{previewStatus === "preview-ready" && previewUrl ? (
+											<div className="flex items-center gap-1">
+												<HugeiconsIcon
+													className="size-4 text-green-500"
+													icon={CheckmarkBadge01Icon}
+												/>
+												<p className="text-muted-foreground text-xs">
+													URL válida.
+												</p>
+											</div>
+										) : null}
 
-								<FieldError>{form.formState.errors.url?.message}</FieldError>
-							</Field>
+										<FieldError>
+											{form.formState.errors.url?.message}
+										</FieldError>
+									</Field>
 
-							<Field data-invalid={!!form.formState.errors.name}>
-								<FieldLabel htmlFor="image-name">Nome</FieldLabel>
-								<Input
-									id="image-name"
-									placeholder="Nome da imagem"
-									{...form.register("name")}
+									<Field data-invalid={!!form.formState.errors.name}>
+										<FieldLabel htmlFor="image-name">Nome</FieldLabel>
+										<Input
+											id="image-name"
+											placeholder="Nome da imagem"
+											{...form.register("name")}
+										/>
+										<FieldError>
+											{form.formState.errors.name?.message}
+										</FieldError>
+									</Field>
+								</div>
+
+								<PreviewPanel
+									previewStatus={previewStatus}
+									previewUrl={previewUrl}
 								/>
-								<FieldError>{form.formState.errors.name?.message}</FieldError>
-							</Field>
-						</div>
+							</div>
 
-						<PreviewPanel
-							previewStatus={previewStatus}
-							previewUrl={previewUrl}
-						/>
+							<GroupSelector
+								groups={groups}
+								lockedGroupIds={lockedGroupIds}
+								onSelectedGroupIdsChange={(next) => {
+									form.setValue("groupIds", next, { shouldValidate: true });
+								}}
+								selectedGroupIds={groupIds ?? []}
+							/>
+
+							<TagSelector
+								onTagsChange={(nextTags) => {
+									form.setValue("tags", nextTags);
+								}}
+								selectedTags={tags ?? []}
+								setTagQuery={setTagQuery}
+								tagQuery={tagQuery}
+							/>
+						</div>
 					</div>
 
-					<GroupSelector
-						groups={groups}
-						lockedGroupIds={lockedGroupIds}
-						onSelectedGroupIdsChange={(next) => {
-							form.setValue("groupIds", next, { shouldValidate: true });
-						}}
-						selectedGroupIds={groupIds ?? []}
-					/>
-
-					<TagSelector
-						onTagsChange={(nextTags) => {
-							form.setValue("tags", nextTags);
-						}}
-						selectedTags={tags ?? []}
-						setTagQuery={setTagQuery}
-						tagQuery={tagQuery}
-					/>
-
-					<DialogFooter>
+					<DialogFooter className="shrink-0 gap-2 border-border border-t px-6 py-4 sm:flex-row">
 						<Button
 							onClick={() => onOpenChange(false)}
 							type="button"

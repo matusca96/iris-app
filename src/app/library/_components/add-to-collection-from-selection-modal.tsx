@@ -112,8 +112,8 @@ export const AddToCollectionFromSelectionModal = () => {
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={addToCollectionModalOpen}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
+			<DialogContent className="flex max-h-[min(90vh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+				<DialogHeader className="shrink-0 border-border border-b px-6 pt-6 pb-4">
 					<DialogTitle className="font-medium text-xl">
 						Adicionar à coleção
 					</DialogTitle>
@@ -123,70 +123,81 @@ export const AddToCollectionFromSelectionModal = () => {
 					</DialogDescription>
 				</DialogHeader>
 
-				<form className="grid gap-4" onSubmit={onSubmit}>
-					<Field data-invalid={!!form.formState.errors.groupId}>
-						<FieldLabel htmlFor="add-to-collection-select">Coleção</FieldLabel>
-						<Controller
-							control={form.control}
-							name="groupId"
-							render={({ field }) => (
-								<Select
-									disabled={!hasGroups}
-									items={groupSelectItems}
-									modal={false}
-									onValueChange={(value) => {
-										field.onChange(value ?? "");
-									}}
-									value={field.value ? field.value : null}
-								>
-									<SelectTrigger
-										aria-invalid={Boolean(form.formState.errors.groupId)}
-										className="w-full"
-										id="add-to-collection-select"
-										size="default"
-									>
-										<SelectValue
-											placeholder={
-												hasGroups
-													? "Selecione uma coleção"
-													: "Nenhuma coleção disponível"
-											}
-										/>
-									</SelectTrigger>
-									<SelectContent alignItemWithTrigger>
-										{sortedGroups.map((group) => (
-											<SelectItem key={group.id} value={group.id}>
-												{group.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							)}
-						/>
-						<FieldError>{form.formState.errors.groupId?.message}</FieldError>
-					</Field>
+				<form
+					className="flex min-h-0 flex-1 flex-col overflow-hidden"
+					onSubmit={onSubmit}
+				>
+					<div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+						<div className="grid gap-4">
+							<Field data-invalid={!!form.formState.errors.groupId}>
+								<FieldLabel htmlFor="add-to-collection-select">
+									Coleção
+								</FieldLabel>
+								<Controller
+									control={form.control}
+									name="groupId"
+									render={({ field }) => (
+										<Select
+											disabled={!hasGroups}
+											items={groupSelectItems}
+											modal={false}
+											onValueChange={(value) => {
+												field.onChange(value ?? "");
+											}}
+											value={field.value ? field.value : null}
+										>
+											<SelectTrigger
+												aria-invalid={Boolean(form.formState.errors.groupId)}
+												className="w-full"
+												id="add-to-collection-select"
+												size="default"
+											>
+												<SelectValue
+													placeholder={
+														hasGroups
+															? "Selecione uma coleção"
+															: "Nenhuma coleção disponível"
+													}
+												/>
+											</SelectTrigger>
+											<SelectContent alignItemWithTrigger>
+												{sortedGroups.map((group) => (
+													<SelectItem key={group.id} value={group.id}>
+														{group.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
+								<FieldError>
+									{form.formState.errors.groupId?.message}
+								</FieldError>
+							</Field>
 
-					<div>
-						<p className="font-medium text-muted-foreground text-xs">
-							Itens ({previewRows.length})
-						</p>
-						<Separator className="my-2" />
-						<ul className="max-h-40 space-y-2 overflow-y-auto text-sm">
-							{previewRows.map((row) => (
-								<li
-									className="flex items-center gap-2"
-									key={`${row.kind}-${row.id}`}
-								>
-									<span className="rounded border border-border px-1.5 py-0.5 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
-										{row.kind === "image" ? "Imagem" : "Paleta"}
-									</span>
-									<span className="min-w-0 truncate">{row.name}</span>
-								</li>
-							))}
-						</ul>
+							<div>
+								<p className="font-medium text-muted-foreground text-xs">
+									Itens ({previewRows.length})
+								</p>
+								<Separator className="my-2" />
+								<ul className="max-h-40 space-y-2 overflow-y-auto text-sm">
+									{previewRows.map((row) => (
+										<li
+											className="flex items-center gap-2"
+											key={`${row.kind}-${row.id}`}
+										>
+											<span className="rounded border border-border px-1.5 py-0.5 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
+												{row.kind === "image" ? "Imagem" : "Paleta"}
+											</span>
+											<span className="min-w-0 truncate">{row.name}</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						</div>
 					</div>
 
-					<DialogFooter>
+					<DialogFooter className="shrink-0 border-border border-t px-6 py-4">
 						<Button
 							onClick={() => onOpenChange(false)}
 							type="button"

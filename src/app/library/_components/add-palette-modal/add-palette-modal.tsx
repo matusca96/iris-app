@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
 	Tooltip,
 	TooltipContent,
@@ -206,119 +205,122 @@ export const AddPaletteModal = ({
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto overflow-x-hidden p-0 sm:max-w-3xl">
-				<DialogHeader className="px-6 pt-6">
+			<DialogContent className="flex max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+				<DialogHeader className="shrink-0 border-border border-b px-6 pt-6 pb-4">
 					<DialogTitle className="text-xl">{dialogTitle}</DialogTitle>
 					<DialogDescription>
 						Escolha cores na grelha, nos sliders ou ao editar OKLCH/RGB/HEX/HSL,
 						depois adicione-as à paleta.
 					</DialogDescription>
 				</DialogHeader>
-				<Separator />
 				<form
-					className="flex flex-col gap-5 px-6 pb-6"
+					className="flex min-h-0 flex-1 flex-col overflow-hidden"
 					onSubmit={form.handleSubmit(onSubmit)}
 				>
-					<div className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-start">
-						<OklchPicker
-							className="min-w-0 rounded-lg border border-border bg-card/30"
-							onChange={setWorkingColor}
-							value={workingColor}
-						/>
+					<div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-6 py-5">
+						<div className="flex flex-col gap-5">
+							<div className="grid min-w-0 gap-6 lg:grid-cols-2 lg:items-start">
+								<OklchPicker
+									className="min-w-0 rounded-lg border border-border bg-card/30"
+									onChange={setWorkingColor}
+									value={workingColor}
+								/>
 
-						<div className="flex min-w-0 flex-col gap-4">
-							<div
-								className="min-h-28 w-full rounded-lg border border-border shadow-sm"
-								style={{ background: formats.oklch }}
+								<div className="flex min-w-0 flex-col gap-4">
+									<div
+										className="min-h-28 w-full rounded-lg border border-border shadow-sm"
+										style={{ background: formats.oklch }}
+									/>
+
+									<ColorFormatInputs
+										onWorkingColorChange={setWorkingColor}
+										workingColor={workingColor}
+									/>
+								</div>
+							</div>
+
+							<Button
+								disabled={alreadyExists}
+								onClick={appendCurrentColor}
+								type="button"
+							>
+								Adicionar cor atual
+							</Button>
+
+							<Field>
+								<FieldLabel>Cores na paleta</FieldLabel>
+								{colors?.length ? (
+									<ul className="mt-2 flex flex-wrap gap-2">
+										{colors.map((entry) => (
+											<li key={entry.id}>
+												<Tooltip>
+													<TooltipTrigger
+														render={
+															<button
+																aria-label="Remover cor"
+																className="oklch-preset-swatch group size-12 cursor-pointer overflow-hidden"
+																onClick={() => removeColorById(entry.id)}
+																style={{ background: entry.oklch }}
+																type="button"
+															>
+																<div className="flex size-full items-center justify-center bg-secondary/50 opacity-0 transition-[background-color,opacity] group-hover:opacity-100">
+																	<HugeiconsIcon
+																		className="size-5 text-destructive"
+																		icon={Delete02Icon}
+																	/>
+																</div>
+															</button>
+														}
+													/>
+													<TooltipContent>{entry.oklch}</TooltipContent>
+												</Tooltip>
+											</li>
+										))}
+									</ul>
+								) : (
+									<p className="text-muted-foreground text-sm">
+										Nenhuma cor adicionada ainda.
+									</p>
+								)}
+								<FieldError>{form.formState.errors.colors?.message}</FieldError>
+							</Field>
+
+							<Field data-invalid={!!form.formState.errors.name}>
+								<FieldLabel htmlFor="palette-name">Nome da paleta</FieldLabel>
+								<Input
+									id="palette-name"
+									placeholder="Nome da paleta"
+									{...form.register("name")}
+								/>
+								<FieldError>{form.formState.errors.name?.message}</FieldError>
+							</Field>
+
+							<GroupSelector
+								groups={groups}
+								lockedGroupIds={lockedGroupIds}
+								onSelectedGroupIdsChange={(next) => {
+									form.setValue("groupIds", next, { shouldValidate: true });
+								}}
+								selectedGroupIds={groupIds ?? []}
 							/>
 
-							<ColorFormatInputs
-								onWorkingColorChange={setWorkingColor}
-								workingColor={workingColor}
+							<TagSelector
+								onTagsChange={(nextTags) => {
+									form.setValue("tags", nextTags);
+								}}
+								selectedTags={tags ?? []}
+								setTagQuery={setTagQuery}
+								tagQuery={tagQuery}
 							/>
+
+							<p className="text-muted-foreground text-xs">
+								Paleta de cores inspirada na lista de swatches do projeto Oklume
+								(MIT).
+							</p>
 						</div>
 					</div>
 
-					<Button
-						disabled={alreadyExists}
-						onClick={appendCurrentColor}
-						type="button"
-					>
-						Adicionar cor atual
-					</Button>
-
-					<Field>
-						<FieldLabel>Cores na paleta</FieldLabel>
-						{colors?.length ? (
-							<ul className="mt-2 flex flex-wrap gap-2">
-								{colors.map((entry) => (
-									<li key={entry.id}>
-										<Tooltip>
-											<TooltipTrigger
-												render={
-													<button
-														aria-label="Remover cor"
-														className="oklch-preset-swatch group size-12 cursor-pointer overflow-hidden"
-														onClick={() => removeColorById(entry.id)}
-														style={{ background: entry.oklch }}
-														type="button"
-													>
-														<div className="flex size-full items-center justify-center bg-secondary/50 opacity-0 transition-[background-color,opacity] group-hover:opacity-100">
-															<HugeiconsIcon
-																className="size-5 text-destructive"
-																icon={Delete02Icon}
-															/>
-														</div>
-													</button>
-												}
-											/>
-											<TooltipContent>{entry.oklch}</TooltipContent>
-										</Tooltip>
-									</li>
-								))}
-							</ul>
-						) : (
-							<p className="text-muted-foreground text-sm">
-								Nenhuma cor adicionada ainda.
-							</p>
-						)}
-						<FieldError>{form.formState.errors.colors?.message}</FieldError>
-					</Field>
-
-					<Field data-invalid={!!form.formState.errors.name}>
-						<FieldLabel htmlFor="palette-name">Nome da paleta</FieldLabel>
-						<Input
-							id="palette-name"
-							placeholder="Nome da paleta"
-							{...form.register("name")}
-						/>
-						<FieldError>{form.formState.errors.name?.message}</FieldError>
-					</Field>
-
-					<GroupSelector
-						groups={groups}
-						lockedGroupIds={lockedGroupIds}
-						onSelectedGroupIdsChange={(next) => {
-							form.setValue("groupIds", next, { shouldValidate: true });
-						}}
-						selectedGroupIds={groupIds ?? []}
-					/>
-
-					<TagSelector
-						onTagsChange={(nextTags) => {
-							form.setValue("tags", nextTags);
-						}}
-						selectedTags={tags ?? []}
-						setTagQuery={setTagQuery}
-						tagQuery={tagQuery}
-					/>
-
-					<p className="text-muted-foreground text-xs">
-						Paleta de cores inspirada na lista de swatches do projeto Oklume
-						(MIT).
-					</p>
-
-					<DialogFooter className="flex-col gap-2 sm:flex-row">
+					<DialogFooter className="shrink-0 flex-col gap-2 border-border border-t px-6 py-4 sm:flex-row">
 						<Button
 							onClick={() => onOpenChange(false)}
 							type="button"

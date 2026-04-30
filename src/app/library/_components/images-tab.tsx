@@ -2,42 +2,24 @@
 
 import {
 	Comment01Icon,
-	Delete02Icon,
-	Edit02Icon,
 	FolderLibraryIcon,
 	ImagePlus,
-	InformationCircleIcon,
 	LayoutGridIcon,
 	Menu01Icon,
-	MoreHorizontalIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo, useState } from "react";
 
 import { EmptyTabContent } from "@/components/empty-tab-content";
 import { EntityTagsPreview } from "@/components/entity-tags-preview";
+import { LibraryDeleteItemDialog } from "@/components/library-delete-item-dialog";
+import { LibraryItemActionsDropdown } from "@/components/library-item-actions-dropdown";
 import {
 	MasonryGallery,
 	type MasonryGalleryItemBase,
 } from "@/components/masonry-gallery";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-	AlertDialog,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
@@ -47,6 +29,7 @@ import { LibraryCommentsDialog } from "./library-comments-dialog";
 
 type ImagesTabProps = {
 	onAddImage: () => void;
+	onEditImage: (id: string) => void;
 };
 
 type LibraryMasonryItem = MasonryGalleryItemBase & {
@@ -112,82 +95,30 @@ const LibraryImageTileCheckbox = ({
 
 type LibraryImageTileMenuProps = {
 	item: LibraryMasonryItem;
+	onEditImage: (id: string) => void;
 	onOpenComments: () => void;
 	onRequestDelete: () => void;
 };
 
 const LibraryImageTileMenu = ({
 	item,
+	onEditImage,
 	onOpenComments,
 	onRequestDelete,
-}: LibraryImageTileMenuProps) => {
-	const [open, setOpen] = useState(false);
+}: LibraryImageTileMenuProps) => (
+	<div className="absolute top-2 right-2 z-10" data-tile-control="">
+		<LibraryItemActionsDropdown
+			itemName={item.name}
+			onEdit={() => {
+				onEditImage(item.id);
+			}}
+			onOpenComments={onOpenComments}
+			onRequestDelete={onRequestDelete}
+		/>
+	</div>
+);
 
-	return (
-		<div
-			className={cn(
-				"absolute top-2 right-2 z-10",
-				"pointer-events-none opacity-0 transition-opacity duration-200",
-				"group-hover/tile:pointer-events-auto group-hover/tile:opacity-100",
-				open && "pointer-events-auto opacity-100"
-			)}
-			data-tile-control=""
-		>
-			<DropdownMenu onOpenChange={setOpen}>
-				<DropdownMenuTrigger
-					aria-label={`Ações para ${item.name}`}
-					className={cn(
-						"inline-flex size-8 items-center justify-center shadow-sm",
-						"hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
-					)}
-					render={
-						<Button size="icon" variant="secondary">
-							<HugeiconsIcon className="size-4" icon={MoreHorizontalIcon} />
-						</Button>
-					}
-				/>
-				<DropdownMenuContent
-					align="end"
-					className="min-w-44"
-					onClick={(e) => {
-						e.stopPropagation();
-					}}
-					onPointerDown={(e) => {
-						e.stopPropagation();
-					}}
-				>
-					<DropdownMenuItem
-						onClick={() => {
-							onOpenComments();
-						}}
-					>
-						<HugeiconsIcon className="size-4" icon={Comment01Icon} />
-						Ver comentários
-					</DropdownMenuItem>
-					<DropdownMenuItem>
-						<HugeiconsIcon className="size-4" icon={Edit02Icon} />
-						Editar
-					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuItem
-						onClick={() => {
-							onRequestDelete();
-						}}
-						variant="destructive"
-					>
-						<HugeiconsIcon className="size-4" icon={Delete02Icon} />
-						Deletar
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
-		</div>
-	);
-};
-
-const COLLECTIONS_DELETE_WARNING =
-	"Ao deletar essa imagem/paleta, ela também será removida de todas as coleções das quais faz parte!";
-
-export const ImagesTab = ({ onAddImage }: ImagesTabProps) => {
+export const ImagesTab = ({ onAddImage, onEditImage }: ImagesTabProps) => {
 	const { images, tags, deleteImage } = useContentStore();
 	const { toggleImage, selectedImageIds } = useLibrarySelection();
 	const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -301,6 +232,7 @@ export const ImagesTab = ({ onAddImage }: ImagesTabProps) => {
 						/>
 						<LibraryImageTileMenu
 							item={item}
+							onEditImage={onEditImage}
 							onOpenComments={() => {
 								setCommentsImageId(item.id);
 							}}
@@ -310,45 +242,22 @@ export const ImagesTab = ({ onAddImage }: ImagesTabProps) => {
 				)}
 			/>
 
-			<AlertDialog
+			<LibraryDeleteItemDialog
+				confirmLabel="Excluir imagem"
+				description={
+					pendingDeleteName
+						? `Esta ação não pode ser desfeita. A imagem "${pendingDeleteName}" será removida permanentemente da biblioteca.`
+						: "Esta ação não pode ser desfeita."
+				}
+				onConfirm={handleConfirmDelete}
 				onOpenChange={(open) => {
 					if (!open) {
 						setPendingDeleteId(null);
 					}
 				}}
 				open={pendingDeleteId !== null}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Excluir imagem?</AlertDialogTitle>
-						<AlertDialogDescription>
-							{pendingDeleteName
-								? `Esta ação não pode ser desfeita. A imagem "${pendingDeleteName}" será removida permanentemente da biblioteca.`
-								: "Esta ação não pode ser desfeita."}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<Alert variant="destructive">
-						<HugeiconsIcon icon={InformationCircleIcon} />
-						<AlertDescription>{COLLECTIONS_DELETE_WARNING}</AlertDescription>
-					</Alert>
-					<AlertDialogFooter>
-						<Button
-							onClick={() => setPendingDeleteId(null)}
-							type="button"
-							variant="ghost"
-						>
-							Cancelar
-						</Button>
-						<Button
-							onClick={handleConfirmDelete}
-							type="button"
-							variant="destructive"
-						>
-							Excluir imagem
-						</Button>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+				title="Excluir imagem?"
+			/>
 
 			<LibraryCommentsDialog
 				entity="images"

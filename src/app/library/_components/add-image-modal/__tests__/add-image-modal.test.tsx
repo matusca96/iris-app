@@ -359,9 +359,9 @@ describe("AddImageModal", () => {
 			"existing-img-id",
 			expect.objectContaining({
 				name: "Renamed",
-				url: "https://example.com/original.png",
 			})
 		);
+		expect(updateSpy.mock.calls[0]?.[1]).not.toHaveProperty("url");
 		expect(addSpy).not.toHaveBeenCalled();
 
 		updateSpy.mockRestore();

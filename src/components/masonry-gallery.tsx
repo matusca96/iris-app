@@ -168,7 +168,7 @@ export const MasonryGallery = <T extends MasonryGalleryItemBase>({
 							"mb-2 break-inside-avoid overflow-hidden rounded-md",
 							hasChrome && "group/tile",
 							selected &&
-								"ring-2 ring-primary/70 ring-offset-0 ring-offset-background",
+								"ring-2 ring-primary ring-offset-2 ring-offset-background",
 							itemClassName
 						)}
 						key={item.id}

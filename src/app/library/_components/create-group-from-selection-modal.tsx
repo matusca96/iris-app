@@ -85,8 +85,8 @@ export const CreateGroupFromSelectionModal = () => {
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={createGroupModalOpen}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
+			<DialogContent className="flex max-h-[min(90vh,720px)] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+				<DialogHeader className="shrink-0 border-border border-b px-6 pt-6 pb-4">
 					<DialogTitle className="font-medium text-xl">
 						Nova coleção
 					</DialogTitle>
@@ -95,39 +95,48 @@ export const CreateGroupFromSelectionModal = () => {
 					</DialogDescription>
 				</DialogHeader>
 
-				<form className="grid gap-4" onSubmit={onSubmit}>
-					<Field data-invalid={!!form.formState.errors.name}>
-						<FieldLabel htmlFor="collection-name">Nome da coleção</FieldLabel>
-						<Input
-							autoComplete="off"
-							id="collection-name"
-							placeholder="Nome da coleção"
-							{...form.register("name")}
-						/>
-						<FieldError>{form.formState.errors.name?.message}</FieldError>
-					</Field>
+				<form
+					className="flex min-h-0 flex-1 flex-col overflow-hidden"
+					onSubmit={onSubmit}
+				>
+					<div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+						<div className="grid gap-4">
+							<Field data-invalid={!!form.formState.errors.name}>
+								<FieldLabel htmlFor="collection-name">
+									Nome da coleção
+								</FieldLabel>
+								<Input
+									autoComplete="off"
+									id="collection-name"
+									placeholder="Nome da coleção"
+									{...form.register("name")}
+								/>
+								<FieldError>{form.formState.errors.name?.message}</FieldError>
+							</Field>
 
-					<div>
-						<p className="font-medium text-muted-foreground text-xs">
-							Itens ({previewRows.length})
-						</p>
-						<Separator className="my-2" />
-						<ul className="max-h-40 space-y-2 overflow-y-auto text-sm">
-							{previewRows.map((row) => (
-								<li
-									className="flex items-center gap-2"
-									key={`${row.kind}-${row.id}`}
-								>
-									<span className="rounded border border-border px-1.5 py-0.5 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
-										{row.kind === "image" ? "Imagem" : "Paleta"}
-									</span>
-									<span className="min-w-0 truncate">{row.name}</span>
-								</li>
-							))}
-						</ul>
+							<div>
+								<p className="font-medium text-muted-foreground text-xs">
+									Itens ({previewRows.length})
+								</p>
+								<Separator className="my-2" />
+								<ul className="max-h-40 space-y-2 overflow-y-auto text-sm">
+									{previewRows.map((row) => (
+										<li
+											className="flex items-center gap-2"
+											key={`${row.kind}-${row.id}`}
+										>
+											<span className="rounded border border-border px-1.5 py-0.5 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
+												{row.kind === "image" ? "Imagem" : "Paleta"}
+											</span>
+											<span className="min-w-0 truncate">{row.name}</span>
+										</li>
+									))}
+								</ul>
+							</div>
+						</div>
 					</div>
 
-					<DialogFooter>
+					<DialogFooter className="shrink-0 border-border border-t px-6 py-4">
 						<Button
 							onClick={() => onOpenChange(false)}
 							type="button"

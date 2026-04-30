@@ -2,26 +2,55 @@
 
 import { PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { EmptyTabContent } from "@/components/empty-tab-content";
+import { LibraryDeleteItemDialog } from "@/components/library-delete-item-dialog";
 import { PalettePreviewRow } from "@/components/palette-preview-row";
 import { Button } from "@/components/ui/button";
 import { useContentStore } from "@/store/content";
 import { useLibrarySelection } from "../_context/library-selection-context";
+import { LibraryCommentsDialog } from "./library-comments-dialog";
 
 type ColorPalettesTabProps = {
 	onAddPalette: () => void;
+	onEditPalette: (id: string) => void;
 };
 
-export const ColorPalettesTab = ({ onAddPalette }: ColorPalettesTabProps) => {
-	const { palettes, tags } = useContentStore();
+export const ColorPalettesTab = ({
+	onAddPalette,
+	onEditPalette,
+}: ColorPalettesTabProps) => {
+	const { palettes, tags, deletePalette } = useContentStore();
 	const { togglePalette, selectedPaletteIds } = useLibrarySelection();
+	const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+	const [commentsPaletteId, setCommentsPaletteId] = useState<string | null>(
+		null
+	);
+
+	const pendingDeleteName = useMemo(() => {
+		if (!pendingDeleteId) {
+			return "";
+		}
+		return palettes.find((p) => p.id === pendingDeleteId)?.name ?? "";
+	}, [palettes, pendingDeleteId]);
 
 	const tagById = useMemo(
 		() => new Map(tags.map((tag) => [tag.id, tag] as const)),
 		[tags]
 	);
+
+	const handleConfirmDelete = () => {
+		if (!pendingDeleteId) {
+			return;
+		}
+		const id = pendingDeleteId;
+		if (selectedPaletteIds.has(id)) {
+			togglePalette(id);
+		}
+		deletePalette(id);
+		setPendingDeleteId(null);
+	};
 
 	return palettes.length ? (
 		<div className="flex h-full flex-col space-y-4 overflow-x-hidden">
@@ -43,10 +72,18 @@ export const ColorPalettesTab = ({ onAddPalette }: ColorPalettesTabProps) => {
 					return (
 						<PalettePreviewRow
 							colors={palette.colors}
+							commentCount={palette.comments.length}
+							groupCount={palette.groupIds.length}
 							key={palette.id}
 							name={palette.name}
-							onClick={() => {
-								/* TODO: wire palette details modal */
+							onEdit={() => {
+								onEditPalette(palette.id);
+							}}
+							onOpenComments={() => {
+								setCommentsPaletteId(palette.id);
+							}}
+							onRequestDelete={() => {
+								setPendingDeleteId(palette.id);
 							}}
 							onSelectionToggle={() => togglePalette(palette.id)}
 							paletteId={palette.id}
@@ -56,6 +93,34 @@ export const ColorPalettesTab = ({ onAddPalette }: ColorPalettesTabProps) => {
 					);
 				})}
 			</div>
+
+			<LibraryDeleteItemDialog
+				confirmLabel="Excluir paleta"
+				description={
+					pendingDeleteName
+						? `Esta ação não pode ser desfeita. A paleta "${pendingDeleteName}" será removida permanentemente da biblioteca.`
+						: "Esta ação não pode ser desfeita."
+				}
+				onConfirm={handleConfirmDelete}
+				onOpenChange={(open) => {
+					if (!open) {
+						setPendingDeleteId(null);
+					}
+				}}
+				open={pendingDeleteId !== null}
+				title="Excluir paleta?"
+			/>
+
+			<LibraryCommentsDialog
+				entity="palettes"
+				itemId={commentsPaletteId}
+				onOpenChange={(open) => {
+					if (!open) {
+						setCommentsPaletteId(null);
+					}
+				}}
+				open={commentsPaletteId !== null}
+			/>
 		</div>
 	) : (
 		<EmptyTabContent
