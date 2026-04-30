@@ -12,6 +12,7 @@ import {
 	Tag01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import Image from "next/image";
 import Link from "next/link";
 import { Label, Pie, PieChart } from "recharts";
 
@@ -111,7 +112,10 @@ const QuickActionsCard = () => (
 	<Card>
 		<CardHeader>
 			<CardTitle className="flex items-center gap-2 font-medium text-xl">
-				<HugeiconsIcon className="text-primary" icon={FlashIcon} />
+				<HugeiconsIcon
+					className="text-primary dark:text-chart-2"
+					icon={FlashIcon}
+				/>
 				Ações rápidas
 			</CardTitle>
 		</CardHeader>
@@ -241,7 +245,14 @@ export default function Home() {
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-3">
-							<div className="rounded-lg border border-border border-dashed p-6 text-center">
+							<Image
+								alt="Logo"
+								className="mx-auto opacity-50 grayscale"
+								height={100}
+								src="/logo.png"
+								width={100}
+							/>
+							<div className="mt-8 rounded-lg border border-border border-dashed p-6 text-center">
 								<p className="font-medium">Comece com uma ação rápida</p>
 								<p className="text-muted-foreground text-sm">
 									Você pode criar seu primeiro asset em segundos.
@@ -326,7 +337,10 @@ export default function Home() {
 				<Card>
 					<CardHeader>
 						<CardTitle className="flex items-center gap-2 font-medium text-xl">
-							<HugeiconsIcon className="text-primary" icon={Sparkles} />
+							<HugeiconsIcon
+								className="text-primary dark:text-chart-2"
+								icon={Sparkles}
+							/>
 							Insights
 						</CardTitle>
 					</CardHeader>
@@ -367,11 +381,14 @@ export default function Home() {
 										Grupo com mais assets 🏆
 									</p>
 									<Button
-										className="px-0 font-medium text-xl"
+										className="px-0 font-medium text-primary text-xl dark:text-chart-2"
 										nativeButton={false}
 										render={
 											<Link href={`/collections/${topGroup?.id}`}>
-												<HugeiconsIcon icon={LinkSquare02Icon} />
+												<HugeiconsIcon
+													className="text-primary dark:text-chart-2"
+													icon={LinkSquare02Icon}
+												/>
 												{topGroup?.total ? topGroup.name : "Ainda sem dados"}
 											</Link>
 										}
@@ -388,7 +405,10 @@ export default function Home() {
 				<Card className="flex flex-col">
 					<CardHeader className="items-center pb-0">
 						<CardTitle className="flex items-center gap-2 font-medium text-xl">
-							<HugeiconsIcon className="text-primary" icon={ChampionIcon} />
+							<HugeiconsIcon
+								className="text-primary dark:text-chart-2"
+								icon={ChampionIcon}
+							/>
 							Top 5 grupos
 						</CardTitle>
 						<CardDescription>
