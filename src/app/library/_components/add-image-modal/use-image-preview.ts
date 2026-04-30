@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
 	isImageMimeType,
@@ -43,16 +43,19 @@ export const useImagePreview = (url: string, enabled: boolean) => {
 	const currentControllerRef = useRef<AbortController | null>(null);
 	const mountedRef = useRef(false);
 
-	const resetPreview = useCallback(() => {
+	const resetPreview = () => {
 		requestIdRef.current += 1;
 		currentControllerRef.current?.abort();
 		setPreviewStatus("idle");
 		setPreviewUrl("");
-	}, []);
+	};
 
 	useEffect(() => {
 		if (!enabled) {
-			resetPreview();
+			requestIdRef.current += 1;
+			currentControllerRef.current?.abort();
+			setPreviewStatus("idle");
+			setPreviewUrl("");
 			return;
 		}
 
@@ -63,7 +66,10 @@ export const useImagePreview = (url: string, enabled: boolean) => {
 
 		const trimmedUrl = url.trim();
 		if (!trimmedUrl) {
-			resetPreview();
+			requestIdRef.current += 1;
+			currentControllerRef.current?.abort();
+			setPreviewStatus("idle");
+			setPreviewUrl("");
 			return;
 		}
 
@@ -97,7 +103,7 @@ export const useImagePreview = (url: string, enabled: boolean) => {
 		}, PREVIEW_DEBOUNCE_MS);
 
 		return () => window.clearTimeout(timer);
-	}, [enabled, resetPreview, url]);
+	}, [enabled, url]);
 
 	return {
 		previewStatus,

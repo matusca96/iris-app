@@ -9,7 +9,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { AddImageModal } from "@/app/library/_components/add-image-modal/add-image-modal";
@@ -50,15 +50,12 @@ export default function CollectionPage() {
 	} | null>(null);
 	const [deleteOpen, setDeleteOpen] = useState(false);
 
-	const presetGroupIds = useMemo(() => [collectionId], [collectionId]);
-
-	const collectionImages = useMemo(
-		() => images.filter((i) => i.groupIds.includes(collectionId)),
-		[collectionId, images]
+	const presetGroupIds = [collectionId];
+	const collectionImages = images.filter((i) =>
+		i.groupIds.includes(collectionId)
 	);
-	const collectionPalettes = useMemo(
-		() => palettes.filter((p) => p.groupIds.includes(collectionId)),
-		[collectionId, palettes]
+	const collectionPalettes = palettes.filter((p) =>
+		p.groupIds.includes(collectionId)
 	);
 
 	const handleDeleteConfirm = () => {

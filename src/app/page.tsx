@@ -1,9 +1,7 @@
 "use client";
 
 import {
-	ArrowRightIcon,
 	ChampionIcon,
-	FlashIcon,
 	Folder01Icon,
 	Image01Icon,
 	LinkSquare02Icon,
@@ -27,7 +25,6 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import {
-	type ChartConfig,
 	ChartContainer,
 	ChartLegend,
 	ChartLegendContent,
@@ -36,123 +33,14 @@ import {
 } from "@/components/ui/chart";
 import { Separator } from "@/components/ui/separator";
 import { useContentStore } from "@/store/content";
-
-type GroupChartDatum = {
-	id: string;
-	name: string;
-	total: number;
-	fill: string;
-};
-
-const BRAZIL_TIMEZONE = "America/Sao_Paulo";
-const QUICK_ACTIONS = [
-	{
-		description: "Envie novas referências para sua biblioteca",
-		href: "/library?tab=images&modal=add-image",
-		label: "Adicionar imagem",
-		icon: Image01Icon,
-		linkClassName: "border-chart-5/20 bg-chart-5/10 hover:bg-chart-5/20",
-		iconContainerClassName: "bg-chart-5/30",
-		iconClassName: "text-chart-5",
-	},
-	{
-		description: "Crie combinações para seus projetos",
-		href: "/library?tab=palettes&modal=add-palette",
-		label: "Adicionar paleta",
-		icon: PaintBoardIcon,
-		linkClassName:
-			"border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20",
-		iconContainerClassName: "bg-emerald-500/20",
-		iconClassName: "text-emerald-600",
-	},
-	{
-		description: "Organize os itens em uma nova coleção",
-		href: "/collections?modal=create-empty",
-		label: "Criar novo grupo",
-		icon: Folder01Icon,
-		linkClassName:
-			"border-yellow-500/20 bg-yellow-500/10 hover:bg-yellow-500/20",
-		iconContainerClassName: "bg-yellow-500/20",
-		iconClassName: "text-yellow-600",
-	},
-] as const;
-
-const CHART_COLORS = [
-	"var(--chart-1)",
-	"var(--chart-2)",
-	"var(--chart-3)",
-	"var(--chart-4)",
-	"var(--chart-5)",
-] as const;
-
-const getGreetingByHour = (hour: number): string => {
-	if (hour < 12) {
-		return "Bom dia";
-	}
-	if (hour < 18) {
-		return "Boa tarde";
-	}
-	return "Boa noite";
-};
-
-const getHourInBrazil = (): number => {
-	const hour = Number.parseInt(
-		new Intl.DateTimeFormat("pt-BR", {
-			hour: "numeric",
-			hour12: false,
-			timeZone: BRAZIL_TIMEZONE,
-		}).format(new Date()),
-		10
-	);
-
-	return Number.isNaN(hour) ? 9 : hour;
-};
-
-const QuickActionsCard = () => (
-	<Card>
-		<CardHeader>
-			<CardTitle className="flex items-center gap-2 font-medium text-xl">
-				<HugeiconsIcon
-					className="text-primary dark:text-chart-2"
-					icon={FlashIcon}
-				/>
-				Ações rápidas
-			</CardTitle>
-		</CardHeader>
-		<CardContent>
-			<ul className="flex flex-col gap-2">
-				{QUICK_ACTIONS.map((action) => (
-					<li key={action.label}>
-						<Link
-							className={`flex items-center gap-4 rounded-md border p-3 transition-colors ${action.linkClassName}`}
-							href={action.href}
-						>
-							<div
-								className={`corner-squircle rounded-full p-3 ${action.iconContainerClassName}`}
-							>
-								<HugeiconsIcon
-									className={`size-8 ${action.iconClassName}`}
-									icon={action.icon}
-								/>
-							</div>
-							<div className="flex flex-1 flex-col gap-1">
-								<span className="font-medium">{action.label}</span>
-								<span className="text-muted-foreground text-sm">
-									{action.description}
-								</span>
-							</div>
-
-							<HugeiconsIcon
-								className={`size-5 ${action.iconClassName}`}
-								icon={ArrowRightIcon}
-							/>
-						</Link>
-					</li>
-				))}
-			</ul>
-		</CardContent>
-	</Card>
-);
+import {
+	buildChartConfig,
+	getGreetingByHour,
+	getHourInBrazil,
+	withChartColors,
+} from "./home/home.helpers";
+import type { GroupChartDatum } from "./home/home.types";
+import { QuickActionsCard } from "./home/quick-actions-card";
 
 export default function Home() {
 	const images = useContentStore((s) => s.images);
@@ -185,13 +73,7 @@ export default function Home() {
 		.sort((a, b) => b.total - a.total);
 
 	const topGroup = groupStats[0];
-	const topFiveGroups: GroupChartDatum[] = groupStats
-		.filter((group) => group.total > 0)
-		.slice(0, 5)
-		.map((group, index) => ({
-			...group,
-			fill: CHART_COLORS[index % CHART_COLORS.length],
-		}));
+	const topFiveGroups: GroupChartDatum[] = withChartColors(groupStats);
 
 	const tagUsage = [...images, ...palettes].reduce<Map<string, number>>(
 		(acc, item) => {
@@ -212,13 +94,7 @@ export default function Home() {
 		}))
 		.sort((a, b) => b.total - a.total)[0];
 
-	const chartConfig = topFiveGroups.reduce<ChartConfig>((acc, group) => {
-		acc[group.id] = {
-			color: group.fill,
-			label: group.name,
-		};
-		return acc;
-	}, {});
+	const chartConfig = buildChartConfig(topFiveGroups);
 
 	const greeting = getGreetingByHour(getHourInBrazil());
 	const subtitle = hasEntries
@@ -446,7 +322,7 @@ export default function Home() {
 															<tspan
 																className="fill-foreground font-bold text-4xl"
 																x={viewBox.cx}
-																y={viewBox.cy - 55}
+																y={viewBox.cy - 70}
 															>
 																{topFiveGroups
 																	.reduce((acc, group) => acc + group.total, 0)
@@ -455,7 +331,7 @@ export default function Home() {
 															<tspan
 																className="fill-muted-foreground"
 																x={viewBox.cx}
-																y={(viewBox.cy || 0) - 25}
+																y={(viewBox.cy || 0) - 40}
 															>
 																Total de assets
 															</tspan>

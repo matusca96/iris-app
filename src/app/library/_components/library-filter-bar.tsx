@@ -6,7 +6,7 @@ import {
 	Search01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { GroupSelector } from "@/components/group-selector";
 import { Badge } from "@/components/ui/badge";
@@ -59,18 +59,15 @@ export const LibraryFilterBar = ({
 		setSearchInput(q);
 	}, [q]);
 
-	const scheduleCommitSearch = useCallback(
-		(next: string) => {
-			if (debounceTimerRef.current !== undefined) {
-				clearTimeout(debounceTimerRef.current);
-			}
-			debounceTimerRef.current = setTimeout(() => {
-				debounceTimerRef.current = undefined;
-				onQUrlUpdate(next);
-			}, SEARCH_DEBOUNCE_MS);
-		},
-		[onQUrlUpdate]
-	);
+	const scheduleCommitSearch = (next: string) => {
+		if (debounceTimerRef.current !== undefined) {
+			clearTimeout(debounceTimerRef.current);
+		}
+		debounceTimerRef.current = setTimeout(() => {
+			debounceTimerRef.current = undefined;
+			onQUrlUpdate(next);
+		}, SEARCH_DEBOUNCE_MS);
+	};
 
 	useEffect(
 		() => () => {

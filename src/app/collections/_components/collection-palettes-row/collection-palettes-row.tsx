@@ -1,8 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { CollectionMiniPalette } from "./collection-palettes-row/collection-mini-palette";
-import { getPaletteRowMeta } from "./collection-palettes-row/collection-palettes-row.helpers";
-import type { CollectionPalettesRowProps } from "./collection-palettes-row/collection-palettes-row.types";
+import { CollectionMiniPalette } from "./collection-mini-palette";
+import { getPaletteRowMeta } from "./collection-palettes-row.helpers";
+import type { CollectionPalettesRowProps } from "./collection-palettes-row.types";
 
 export const CollectionPalettesRow = ({
 	palettes,

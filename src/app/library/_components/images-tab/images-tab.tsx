@@ -18,18 +18,13 @@ import { MasonryGallery } from "@/components/masonry-gallery";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useContentStore } from "@/store/content";
-import { useLibrarySelection } from "../_context/library-selection-context";
-import {
-	buildMasonryItems,
-	getPendingDeleteName,
-} from "./images-tab/images-tab.helpers";
-import type { ImagesTabProps } from "./images-tab/images-tab.types";
-import { LibraryImageTileCheckbox } from "./images-tab/library-image-tile-checkbox";
-import { LibraryImageTileMenu } from "./images-tab/library-image-tile-menu";
-import { LibraryCommentsDialog } from "./library-comments-dialog";
-import { LibraryImageListRow } from "./library-image-list-row";
-
-export type { LibraryImageViewMode } from "./images-tab/images-tab.types";
+import { useLibrarySelection } from "../../_context/library-selection-context";
+import { LibraryCommentsDialog } from "../library-comments-dialog";
+import { LibraryImageListRow } from "../library-image-list-row";
+import { buildMasonryItems, getPendingDeleteName } from "./images-tab.helpers";
+import type { ImagesTabProps } from "./images-tab.types";
+import { LibraryImageTileCheckbox } from "./library-image-tile-checkbox";
+import { LibraryImageTileMenu } from "./library-image-tile-menu";
 
 export const ImagesTab = ({
 	images,
@@ -95,6 +90,7 @@ export const ImagesTab = ({
 					<HugeiconsIcon icon={ImagePlus} />
 					Adicionar imagem
 				</Button>
+
 				<ToggleGroup
 					onValueChange={(next) => {
 						const resolved = next[0];
@@ -115,6 +111,7 @@ export const ImagesTab = ({
 					</ToggleGroupItem>
 				</ToggleGroup>
 			</div>
+
 			{view === "grid" ? (
 				<MasonryGallery
 					className="py-1"
@@ -160,7 +157,9 @@ export const ImagesTab = ({
 							<LibraryImageTileMenu
 								item={item}
 								onEditImage={onEditImage}
-								onOpenComments={() => setCommentsImageId(item.id)}
+								onOpenComments={() => {
+									setCommentsImageId(item.id);
+								}}
 								onRequestDelete={() => setPendingDeleteId(item.id)}
 							/>
 						</div>
@@ -186,6 +185,7 @@ export const ImagesTab = ({
 					))}
 				</div>
 			)}
+
 			<LibraryDeleteItemDialog
 				confirmLabel="Excluir imagem"
 				description={
@@ -202,6 +202,7 @@ export const ImagesTab = ({
 				open={pendingDeleteId !== null}
 				title="Excluir imagem?"
 			/>
+
 			<LibraryCommentsDialog
 				entity="images"
 				itemId={commentsImageId}

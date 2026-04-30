@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -66,9 +66,8 @@ export const LibraryCommentsDialog = ({
 		}
 	}, [item, itemId, onOpenChange, open]);
 
-	const sortedComments = useMemo(
-		() => [...comments].sort((a, b) => a.createdAt - b.createdAt),
-		[comments]
+	const sortedComments = [...comments].sort(
+		(a, b) => a.createdAt - b.createdAt
 	);
 
 	const trimmedDraft = draft.trim();

@@ -25,6 +25,8 @@ const GROUP_COMBO_PLACEHOLDER = /Buscar ou adicionar grupos/i;
 const imagePreviewMocks = vi.hoisted(() => ({
 	checkImageUrl: vi.fn(),
 	resetPreview: vi.fn(),
+	setPreviewStatus: vi.fn(),
+	setPreviewUrl: vi.fn(),
 }));
 
 const tagSetup = vi.hoisted(() => ({
@@ -37,6 +39,8 @@ vi.mock("../use-image-preview", () => ({
 		previewStatus: "idle" as const,
 		previewUrl: "",
 		resetPreview: imagePreviewMocks.resetPreview,
+		setPreviewStatus: imagePreviewMocks.setPreviewStatus,
+		setPreviewUrl: imagePreviewMocks.setPreviewUrl,
 	}),
 }));
 
@@ -118,6 +122,9 @@ describe("AddImageModal", () => {
 		tagSetup.getTagsForMock = () => [];
 		imagePreviewMocks.checkImageUrl.mockReset();
 		imagePreviewMocks.checkImageUrl.mockResolvedValue("preview-ready");
+		imagePreviewMocks.resetPreview.mockReset();
+		imagePreviewMocks.setPreviewStatus.mockReset();
+		imagePreviewMocks.setPreviewUrl.mockReset();
 
 		localStorage.clear();
 		const mod = await import("@/store/content");

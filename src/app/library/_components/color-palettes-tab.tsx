@@ -2,7 +2,7 @@
 
 import { PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { EmptyTabContent } from "@/components/empty-tab-content";
@@ -37,17 +37,10 @@ export const ColorPalettesTab = ({
 		null
 	);
 
-	const pendingDeleteName = useMemo(() => {
-		if (!pendingDeleteId) {
-			return "";
-		}
-		return palettes.find((p) => p.id === pendingDeleteId)?.name ?? "";
-	}, [palettes, pendingDeleteId]);
-
-	const tagById = useMemo(
-		() => new Map(tags.map((tag) => [tag.id, tag] as const)),
-		[tags]
-	);
+	const pendingDeleteName = pendingDeleteId
+		? (palettes.find((p) => p.id === pendingDeleteId)?.name ?? "")
+		: "";
+	const tagById = new Map(tags.map((tag) => [tag.id, tag] as const));
 
 	const handleConfirmDelete = () => {
 		if (!pendingDeleteId) {

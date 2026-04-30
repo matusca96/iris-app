@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -81,12 +81,6 @@ export const AddPaletteModal = ({
 
 	const formats = tripletToDisplayFormats(workingColor);
 
-	const resetAll = useCallback(() => {
-		form.reset();
-		setTagQuery("");
-		setWorkingColor(DEFAULT_WORKING_OKLCH);
-	}, [form]);
-
 	const openPropsRef = useRef({
 		defaultGroupIds,
 		lockedGroupIds,
@@ -96,7 +90,9 @@ export const AddPaletteModal = ({
 
 	useEffect(() => {
 		if (!open) {
-			resetAll();
+			form.reset();
+			setTagQuery("");
+			setWorkingColor(DEFAULT_WORKING_OKLCH);
 			return;
 		}
 
@@ -121,7 +117,7 @@ export const AddPaletteModal = ({
 		}
 		setTagQuery("");
 		setWorkingColor(DEFAULT_WORKING_OKLCH);
-	}, [open, initialValues, resetAll]);
+	}, [form, initialValues, open]);
 
 	const lockedCollectionName =
 		lockedGroupIds && lockedGroupIds.length > 0

@@ -1,9 +1,9 @@
 "use client";
 
 import { useContentStore } from "@/store/content";
-import { CollectionDetailImageTile } from "./collection-detail-images/collection-detail-image-tile";
-import { buildCollectionImageUpdate } from "./collection-detail-images/collection-detail-images.helpers";
-import type { CollectionDetailImagesProps } from "./collection-detail-images/collection-detail-images.types";
+import { CollectionDetailImageTile } from "./collection-detail-image-tile";
+import { buildCollectionImageUpdate } from "./collection-detail-images.helpers";
+import type { CollectionDetailImagesProps } from "./collection-detail-images.types";
 
 export const CollectionDetailImages = ({
 	collectionId,

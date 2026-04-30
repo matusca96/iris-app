@@ -5,7 +5,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import type { KeyboardEvent } from "react";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 
 import {
 	canCreateTagFromQuery,
@@ -93,9 +93,9 @@ export const TagSelector = ({
 	const { tags } = useContentStore();
 	const anchor = useComboboxAnchor();
 
-	const tagOptions = useMemo(() => tags.map(toTagOption), [tags]);
+	const tagOptions = tags.map(toTagOption);
 	const normalizedQuery = tagQuery.trim();
-	const canCreateTag = useMemo(() => {
+	const canCreateTag = (() => {
 		if (!canCreateTagFromQuery(tagQuery, tags)) {
 			return false;
 		}
@@ -103,9 +103,9 @@ export const TagSelector = ({
 		return !selectedTags.some(
 			(tag) => normalizeTagName(tag.name) === normalized
 		);
-	}, [selectedTags, tagQuery, tags]);
+	})();
 
-	const comboboxItems = useMemo(() => {
+	const comboboxItems = (() => {
 		if (!(normalizedQuery && canCreateTag)) {
 			return tagOptions;
 		}
@@ -119,7 +119,7 @@ export const TagSelector = ({
 				creatable: normalizedQuery,
 			},
 		];
-	}, [canCreateTag, normalizedQuery, tagOptions]);
+	})();
 
 	const handleTagsChange = (nextValues: TagOption[]) => {
 		const nextCreatable = nextValues.find(

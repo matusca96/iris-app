@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
 	Combobox,
@@ -46,28 +46,19 @@ export const GroupSelector = ({
 	const [query, setQuery] = useState("");
 	const anchor = useComboboxAnchor();
 
-	const lockedSet = useMemo(
-		() => new Set(lockedGroupIds ?? []),
-		[lockedGroupIds]
-	);
+	const lockedSet = new Set(lockedGroupIds ?? []);
 
-	const selectedGroups = useMemo(
-		() => groups.filter((g) => selectedGroupIds.includes(g.id)),
-		[groups, selectedGroupIds]
-	);
+	const selectedGroups = groups.filter((g) => selectedGroupIds.includes(g.id));
 
-	const handleValueChange = useCallback(
-		(next: Group[]) => {
-			const nextIds = next.map((g) => g.id);
-			const withLocked = mergeWithLocked(nextIds, lockedGroupIds);
-			const valid = withLocked.filter((id) =>
-				groups.some((group) => group.id === id)
-			);
-			onSelectedGroupIdsChange(valid);
-			setQuery("");
-		},
-		[groups, lockedGroupIds, onSelectedGroupIdsChange]
-	);
+	const handleValueChange = (next: Group[]) => {
+		const nextIds = next.map((g) => g.id);
+		const withLocked = mergeWithLocked(nextIds, lockedGroupIds);
+		const valid = withLocked.filter((id) =>
+			groups.some((group) => group.id === id)
+		);
+		onSelectedGroupIdsChange(valid);
+		setQuery("");
+	};
 
 	const handleChipInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
 		if (event.key !== "Enter") {

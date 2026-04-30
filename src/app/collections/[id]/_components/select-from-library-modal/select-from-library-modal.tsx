@@ -14,12 +14,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useContentStore } from "@/store/content";
-import { buildLibraryPickerState } from "./select-from-library-modal/select-from-library-modal.helpers";
-import type { SelectFromLibraryModalProps } from "./select-from-library-modal/select-from-library-modal.types";
-import { SelectableImageCard } from "./select-from-library-modal/selectable-image-card";
-import { SelectablePaletteRow } from "./select-from-library-modal/selectable-palette-row";
-
-export type { SelectFromLibraryKind } from "./select-from-library-modal/select-from-library-modal.types";
+import { buildLibraryPickerState } from "./select-from-library-modal.helpers";
+import type { SelectFromLibraryModalProps } from "./select-from-library-modal.types";
+import { SelectableImageCard } from "./selectable-image-card";
+import { SelectablePaletteRow } from "./selectable-palette-row";
 
 export const SelectFromLibraryModal = ({
 	kind,
@@ -159,9 +157,11 @@ export const SelectFromLibraryModal = ({
 						value={query}
 					/>
 				</div>
+
 				<div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
 					{bodyContent}
 				</div>
+
 				<DialogFooter className="shrink-0 justify-between gap-4 border-border border-t px-6 py-4 sm:justify-between">
 					<p className="text-muted-foreground text-sm">{selectionLabel}</p>
 					<div className="flex flex-wrap gap-2 sm:ml-auto">

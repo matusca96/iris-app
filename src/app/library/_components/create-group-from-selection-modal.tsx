@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -50,25 +49,23 @@ export const CreateGroupFromSelectionModal = () => {
 		resolver: zodResolver(formSchema),
 	});
 
-	const previewRows = useMemo(() => {
-		const rows: { kind: "image" | "palette"; id: string; name: string }[] = [];
-		const imageById = new Map(images.map((i) => [i.id, i] as const));
-		const paletteById = new Map(palettes.map((p) => [p.id, p] as const));
+	const previewRows: { kind: "image" | "palette"; id: string; name: string }[] =
+		[];
+	const imageById = new Map(images.map((i) => [i.id, i] as const));
+	const paletteById = new Map(palettes.map((p) => [p.id, p] as const));
 
-		for (const id of selectedImageIds) {
-			const img = imageById.get(id);
-			if (img) {
-				rows.push({ kind: "image", id, name: img.name });
-			}
+	for (const id of selectedImageIds) {
+		const img = imageById.get(id);
+		if (img) {
+			previewRows.push({ kind: "image", id, name: img.name });
 		}
-		for (const id of selectedPaletteIds) {
-			const pal = paletteById.get(id);
-			if (pal) {
-				rows.push({ kind: "palette", id, name: pal.name });
-			}
+	}
+	for (const id of selectedPaletteIds) {
+		const pal = paletteById.get(id);
+		if (pal) {
+			previewRows.push({ kind: "palette", id, name: pal.name });
 		}
-		return rows;
-	}, [images, palettes, selectedImageIds, selectedPaletteIds]);
+	}
 
 	const onOpenChange = (open: boolean) => {
 		if (!open) {

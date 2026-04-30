@@ -8,7 +8,7 @@ import {
 	Loading01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -87,16 +87,13 @@ export const AddImageModal = ({
 		name: ["url", "tags", "groupIds"],
 	});
 
-	const { previewStatus, previewUrl, checkImageUrl, resetPreview } =
-		useImagePreview(url ?? "", open);
-
-	const resetForm = useCallback(() => {
-		form.reset();
-		setTagQuery("");
-		setTagGenerationError(null);
-		setIsGeneratingTags(false);
-		resetPreview();
-	}, [form, resetPreview]);
+	const {
+		previewStatus,
+		previewUrl,
+		checkImageUrl,
+		setPreviewStatus,
+		setPreviewUrl,
+	} = useImagePreview(url ?? "", open);
 
 	const openPropsRef = useRef({
 		defaultGroupIds,
@@ -107,7 +104,12 @@ export const AddImageModal = ({
 
 	useEffect(() => {
 		if (!open) {
-			resetForm();
+			form.reset();
+			setTagQuery("");
+			setTagGenerationError(null);
+			setIsGeneratingTags(false);
+			setPreviewStatus("idle");
+			setPreviewUrl("");
 			return;
 		}
 
@@ -131,8 +133,9 @@ export const AddImageModal = ({
 			});
 		}
 		setTagQuery("");
-		resetPreview();
-	}, [open, initialValues, resetForm, resetPreview]);
+		setPreviewStatus("idle");
+		setPreviewUrl("");
+	}, [form, initialValues, open, setPreviewStatus, setPreviewUrl]);
 
 	const lockedCollectionName =
 		lockedGroupIds && lockedGroupIds.length > 0

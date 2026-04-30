@@ -71,6 +71,16 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Prefer simple conditionals over nested ternary operators
 - Group related code together and separate concerns
 - For complex UI features, always create a dedicated folder and split by responsibility (container, child components, hooks, helpers, tests) instead of keeping everything in one large component file
+- Enforce one component per file. If a component needs local child components, colocate them as sibling files inside a dedicated feature folder
+- For feature-scoped components, use a folder pattern similar to `add-image-modal`:
+  - `<feature>.tsx` for the main component
+  - `<child-component>.tsx` for every child component
+  - `<feature>.helpers.ts` for pure helpers
+  - `<feature>.constants.ts` for non-trivial constants
+  - `<feature>.types.ts` for extracted local types
+  - optional `<feature>.schema.ts` and `use-*.ts` hooks when complexity justifies it
+- Do not keep helpers, constants, and non-trivial local types inside large component files when they can be extracted to dedicated files in the same feature folder
+- Do not use `useMemo` or `useCallback`. We rely on React Compiler and direct computation with pure helper functions
 
 ### Security
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -38,9 +38,9 @@ export const CreateEmptyCollectionModal = ({
 		resolver: zodResolver(createEmptyCollectionFormSchema),
 	});
 
-	const resetForm = useCallback(() => {
+	const resetForm = () => {
 		form.reset();
-	}, [form]);
+	};
 
 	useEffect(() => {
 		if (!open) {

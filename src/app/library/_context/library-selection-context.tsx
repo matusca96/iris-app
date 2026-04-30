@@ -3,10 +3,8 @@
 import {
 	createContext,
 	type ReactNode,
-	useCallback,
 	useContext,
 	useEffect,
-	useMemo,
 	useState,
 } from "react";
 
@@ -45,7 +43,7 @@ export const LibrarySelectionProvider = ({
 	const [addToCollectionModalOpen, setAddToCollectionModalOpen] =
 		useState(false);
 
-	const toggleImage = useCallback((id: string) => {
+	const toggleImage = (id: string) => {
 		setSelectedImageIds((prev) => {
 			const next = new Set(prev);
 			if (next.has(id)) {
@@ -55,9 +53,9 @@ export const LibrarySelectionProvider = ({
 			}
 			return next;
 		});
-	}, []);
+	};
 
-	const togglePalette = useCallback((id: string) => {
+	const togglePalette = (id: string) => {
 		setSelectedPaletteIds((prev) => {
 			const next = new Set(prev);
 			if (next.has(id)) {
@@ -67,12 +65,12 @@ export const LibrarySelectionProvider = ({
 			}
 			return next;
 		});
-	}, []);
+	};
 
-	const clearSelection = useCallback(() => {
+	const clearSelection = () => {
 		setSelectedImageIds(new Set());
 		setSelectedPaletteIds(new Set());
-	}, []);
+	};
 
 	useEffect(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
@@ -98,33 +96,22 @@ export const LibrarySelectionProvider = ({
 		selectedPaletteIds.size,
 	]);
 
-	const value = useMemo(
-		(): LibrarySelectionContextValue => ({
-			selectedImageIds,
-			selectedPaletteIds,
-			toggleImage,
-			togglePalette,
-			clearSelection,
-			selectedImageCount: selectedImageIds.size,
-			selectedPaletteCount: selectedPaletteIds.size,
-			totalSelectedCount: selectedImageIds.size + selectedPaletteIds.size,
-			createGroupModalOpen,
-			openCreateGroupModal: () => setCreateGroupModalOpen(true),
-			closeCreateGroupModal: () => setCreateGroupModalOpen(false),
-			addToCollectionModalOpen,
-			openAddToCollectionModal: () => setAddToCollectionModalOpen(true),
-			closeAddToCollectionModal: () => setAddToCollectionModalOpen(false),
-		}),
-		[
-			selectedImageIds,
-			selectedPaletteIds,
-			toggleImage,
-			togglePalette,
-			clearSelection,
-			createGroupModalOpen,
-			addToCollectionModalOpen,
-		]
-	);
+	const value: LibrarySelectionContextValue = {
+		selectedImageIds,
+		selectedPaletteIds,
+		toggleImage,
+		togglePalette,
+		clearSelection,
+		selectedImageCount: selectedImageIds.size,
+		selectedPaletteCount: selectedPaletteIds.size,
+		totalSelectedCount: selectedImageIds.size + selectedPaletteIds.size,
+		createGroupModalOpen,
+		openCreateGroupModal: () => setCreateGroupModalOpen(true),
+		closeCreateGroupModal: () => setCreateGroupModalOpen(false),
+		addToCollectionModalOpen,
+		openAddToCollectionModal: () => setAddToCollectionModalOpen(true),
+		closeAddToCollectionModal: () => setAddToCollectionModalOpen(false),
+	};
 
 	return (
 		<LibrarySelectionContext.Provider value={value}>

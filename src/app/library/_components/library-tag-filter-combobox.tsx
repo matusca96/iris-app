@@ -1,7 +1,7 @@
 "use client";
 
 import type { KeyboardEvent } from "react";
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 
 import {
 	Combobox,
@@ -35,21 +35,15 @@ export const LibraryTagFilterCombobox = ({
 	const [query, setQuery] = useState("");
 	const anchor = useComboboxAnchor();
 
-	const selectedTags = useMemo(
-		() => tags.filter((t) => selectedTagIds.includes(t.id)),
-		[tags, selectedTagIds]
-	);
+	const selectedTags = tags.filter((t) => selectedTagIds.includes(t.id));
 
-	const handleValueChange = useCallback(
-		(next: Tag[]) => {
-			const nextIds = next
-				.map((t) => t.id)
-				.filter((id) => tags.some((t) => t.id === id));
-			onSelectedTagIdsChange(nextIds);
-			setQuery("");
-		},
-		[onSelectedTagIdsChange, tags]
-	);
+	const handleValueChange = (next: Tag[]) => {
+		const nextIds = next
+			.map((t) => t.id)
+			.filter((id) => tags.some((t) => t.id === id));
+		onSelectedTagIdsChange(nextIds);
+		setQuery("");
+	};
 
 	const handleChipInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
 		if (event.key !== "Enter") {

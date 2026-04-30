@@ -8,7 +8,7 @@ import {
 	parseAsStringLiteral,
 	useQueryStates,
 } from "nuqs";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContentStore } from "@/store/content";
@@ -66,91 +66,68 @@ export const LibraryPageClient = () => {
 	const tags = useContentStore((s) => s.tags);
 	const groups = useContentStore((s) => s.groups);
 
-	const filterCtx = useMemo(() => {
-		const tagNameById = buildTagNameById(tags);
-		return {
-			q,
-			groupFilterIds: urlGroupIds,
-			tagFilterIds: urlTagIds,
-			tagNameById,
-		};
-	}, [q, tags, urlGroupIds, urlTagIds]);
+	const filterCtx = {
+		q,
+		groupFilterIds: urlGroupIds,
+		tagFilterIds: urlTagIds,
+		tagNameById: buildTagNameById(tags),
+	};
 
-	const filteredImages = useMemo(
-		() => filterImages(images, filterCtx),
-		[images, filterCtx]
-	);
+	const filteredImages = filterImages(images, filterCtx);
+	const filteredPalettes = filterPalettes(palettes, filterCtx);
 
-	const filteredPalettes = useMemo(
-		() => filterPalettes(palettes, filterCtx),
-		[palettes, filterCtx]
-	);
+	const onQUrlUpdate = (next: string) => {
+		setParams({ q: next.length > 0 ? next : null }).catch(() => undefined);
+	};
 
-	const onQUrlUpdate = useCallback(
-		(next: string) => {
-			setParams({ q: next.length > 0 ? next : null }).catch(() => undefined);
-		},
-		[setParams]
-	);
-
-	const onClearGroupTagFilters = useCallback(() => {
+	const onClearGroupTagFilters = () => {
 		setParams({ groups: [], tags: [] }).catch(() => undefined);
-	}, [setParams]);
+	};
 
-	const onClearLibraryFilters = useCallback(() => {
+	const onClearLibraryFilters = () => {
 		setParams({ q: null, groups: [], tags: [] }).catch(() => undefined);
-	}, [setParams]);
+	};
 
-	const imageModalInitialValues = useMemo(():
-		| AddImageModalInitialValues
-		| undefined => {
-		if (modal !== "edit-image" || !modalEntityId) {
-			return;
-		}
+	let imageModalInitialValues: AddImageModalInitialValues | undefined;
+	if (modal === "edit-image" && modalEntityId) {
 		const img = images.find((i) => i.id === modalEntityId);
-		if (!img) {
-			return;
+		if (img) {
+			imageModalInitialValues = {
+				id: img.id,
+				name: img.name,
+				url: img.url,
+				groupIds: img.groupIds,
+				tags: img.tags
+					.map((tagId) => tags.find((t) => t.id === tagId))
+					.filter((t): t is NonNullable<typeof t> => Boolean(t))
+					.map((t) => ({ color: t.color, id: t.id, name: t.name })),
+			};
 		}
-		return {
-			id: img.id,
-			name: img.name,
-			url: img.url,
-			groupIds: img.groupIds,
-			tags: img.tags
-				.map((tagId) => tags.find((t) => t.id === tagId))
-				.filter((t): t is NonNullable<typeof t> => Boolean(t))
-				.map((t) => ({ color: t.color, id: t.id, name: t.name })),
-		};
-	}, [modal, modalEntityId, images, tags]);
+	}
 
-	const paletteModalInitialValues = useMemo(():
-		| AddPaletteModalInitialValues
-		| undefined => {
-		if (modal !== "edit-palette" || !modalEntityId) {
-			return;
-		}
+	let paletteModalInitialValues: AddPaletteModalInitialValues | undefined;
+	if (modal === "edit-palette" && modalEntityId) {
 		const p = palettes.find((x) => x.id === modalEntityId);
-		if (!p) {
-			return;
+		if (p) {
+			paletteModalInitialValues = {
+				id: p.id,
+				name: p.name,
+				groupIds: p.groupIds,
+				colors: p.colors.map((oklch) => ({
+					id: crypto.randomUUID(),
+					oklch,
+				})),
+				tags: p.tags
+					.map((tagId) => tags.find((t) => t.id === tagId))
+					.filter((t): t is NonNullable<typeof t> => Boolean(t))
+					.map((t) => ({ color: t.color, id: t.id, name: t.name })),
+			};
 		}
-		return {
-			id: p.id,
-			name: p.name,
-			groupIds: p.groupIds,
-			colors: p.colors.map((oklch) => ({
-				id: crypto.randomUUID(),
-				oklch,
-			})),
-			tags: p.tags
-				.map((tagId) => tags.find((t) => t.id === tagId))
-				.filter((t): t is NonNullable<typeof t> => Boolean(t))
-				.map((t) => ({ color: t.color, id: t.id, name: t.name })),
-		};
-	}, [modal, modalEntityId, palettes, tags]);
+	}
 
-	const clearModalParams = useCallback(() => {
+	const clearModalParams = () => {
 		setParams({ id: null, modal: null }).catch(() => undefined);
-	}, [setParams]);
+	};
 
 	const [hasContentHydrated, setHasContentHydrated] = useState(false);
 
