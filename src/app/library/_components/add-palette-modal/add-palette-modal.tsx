@@ -120,7 +120,7 @@ export const AddPaletteModal = ({
 		}
 		setTagQuery("");
 		setWorkingColor(DEFAULT_WORKING_OKLCH);
-	}, [open, resetAll]);
+	}, [open, initialValues, resetAll]);
 
 	const lockedCollectionName =
 		lockedGroupIds && lockedGroupIds.length > 0

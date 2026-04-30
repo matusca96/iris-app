@@ -119,7 +119,7 @@ export const AddImageModal = ({
 		}
 		setTagQuery("");
 		resetPreview();
-	}, [open, resetForm, resetPreview]);
+	}, [open, initialValues, resetForm, resetPreview]);
 
 	const lockedCollectionName =
 		lockedGroupIds && lockedGroupIds.length > 0

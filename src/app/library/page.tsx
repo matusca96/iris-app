@@ -2,8 +2,8 @@
 
 import { ImageIcon, PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { useMemo, useState } from "react";
+import { parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContentStore } from "@/store/content";
@@ -18,15 +18,21 @@ import { ImagesTab } from "./_components/images-tab";
 import { LibrarySelectionToolbar } from "./_components/library-selection-toolbar";
 import { LibrarySelectionProvider } from "./_context/library-selection-context";
 
-const modalParser = parseAsStringLiteral(["add-image", "add-palette"]);
+const libraryModalParser = parseAsStringLiteral([
+	"add-image",
+	"add-palette",
+	"edit-image",
+	"edit-palette",
+]);
 
 export default function LibraryPage() {
-	const [modal, setModal] = useQueryState(
-		"modal",
-		modalParser.withOptions({ history: "replace" })
+	const [{ modal, id: modalEntityId }, setParams] = useQueryStates(
+		{
+			id: parseAsString,
+			modal: libraryModalParser,
+		},
+		{ history: "replace" }
 	);
-	const [editingImageId, setEditingImageId] = useState<string | null>(null);
-	const [editingPaletteId, setEditingPaletteId] = useState<string | null>(null);
 
 	const images = useContentStore((s) => s.images);
 	const palettes = useContentStore((s) => s.palettes);
@@ -35,10 +41,10 @@ export default function LibraryPage() {
 	const imageModalInitialValues = useMemo(():
 		| AddImageModalInitialValues
 		| undefined => {
-		if (!editingImageId) {
+		if (modal !== "edit-image" || !modalEntityId) {
 			return;
 		}
-		const img = images.find((i) => i.id === editingImageId);
+		const img = images.find((i) => i.id === modalEntityId);
 		if (!img) {
 			return;
 		}
@@ -52,15 +58,15 @@ export default function LibraryPage() {
 				.filter((t): t is NonNullable<typeof t> => Boolean(t))
 				.map((t) => ({ color: t.color, id: t.id, name: t.name })),
 		};
-	}, [editingImageId, images, tags]);
+	}, [modal, modalEntityId, images, tags]);
 
 	const paletteModalInitialValues = useMemo(():
 		| AddPaletteModalInitialValues
 		| undefined => {
-		if (!editingPaletteId) {
+		if (modal !== "edit-palette" || !modalEntityId) {
 			return;
 		}
-		const p = palettes.find((x) => x.id === editingPaletteId);
+		const p = palettes.find((x) => x.id === modalEntityId);
 		if (!p) {
 			return;
 		}
@@ -77,7 +83,58 @@ export default function LibraryPage() {
 				.filter((t): t is NonNullable<typeof t> => Boolean(t))
 				.map((t) => ({ color: t.color, id: t.id, name: t.name })),
 		};
-	}, [editingPaletteId, palettes, tags]);
+	}, [modal, modalEntityId, palettes, tags]);
+
+	const clearModalParams = useCallback(() => {
+		setParams({ id: null, modal: null }).catch(() => undefined);
+	}, [setParams]);
+
+	const [hasContentHydrated, setHasContentHydrated] = useState(false);
+
+	useEffect(() => {
+		if (useContentStore.persist.hasHydrated()) {
+			setHasContentHydrated(true);
+		}
+		const unsub = useContentStore.persist.onFinishHydration(() => {
+			setHasContentHydrated(true);
+		});
+		return unsub;
+	}, []);
+
+	useEffect(() => {
+		if (!hasContentHydrated) {
+			return;
+		}
+		if (modal === "add-image" || modal === "add-palette") {
+			if (modalEntityId) {
+				setParams({ id: null }).catch(() => undefined);
+			}
+			return;
+		}
+		if (modal === "edit-image") {
+			if (!(modalEntityId && images.some((i) => i.id === modalEntityId))) {
+				clearModalParams();
+			}
+			return;
+		}
+		if (
+			modal === "edit-palette" &&
+			!(modalEntityId && palettes.some((p) => p.id === modalEntityId))
+		) {
+			clearModalParams();
+		}
+	}, [
+		clearModalParams,
+		hasContentHydrated,
+		modal,
+		modalEntityId,
+		images,
+		palettes,
+		setParams,
+	]);
+
+	const imageModalOpen = modal === "add-image" || modal === "edit-image";
+	const paletteModalOpen = modal === "add-palette" || modal === "edit-palette";
 
 	return (
 		<LibrarySelectionProvider>
@@ -94,11 +151,14 @@ export default function LibraryPage() {
 					<TabsContent className="max-w-full overflow-x-hidden" value="images">
 						<ImagesTab
 							onAddImage={() => {
-								setEditingImageId(null);
-								setModal("add-image").catch(() => undefined);
+								setParams({ id: null, modal: "add-image" }).catch(
+									() => undefined
+								);
 							}}
-							onEditImage={(id) => {
-								setEditingImageId(id);
+							onEditImage={(editId) => {
+								setParams({ id: editId, modal: "edit-image" }).catch(
+									() => undefined
+								);
 							}}
 						/>
 					</TabsContent>
@@ -108,36 +168,39 @@ export default function LibraryPage() {
 					>
 						<ColorPalettesTab
 							onAddPalette={() => {
-								setEditingPaletteId(null);
-								setModal("add-palette").catch(() => undefined);
+								setParams({ id: null, modal: "add-palette" }).catch(
+									() => undefined
+								);
 							}}
-							onEditPalette={(id) => {
-								setEditingPaletteId(id);
+							onEditPalette={(editId) => {
+								setParams({ id: editId, modal: "edit-palette" }).catch(
+									() => undefined
+								);
 							}}
 						/>
 					</TabsContent>
 				</Tabs>
 				<AddImageModal
-					initialValues={editingImageId ? imageModalInitialValues : undefined}
+					initialValues={
+						modal === "edit-image" ? imageModalInitialValues : undefined
+					}
 					onOpenChange={(open) => {
-						if (!open) {
-							setEditingImageId(null);
-							setModal(null).catch(() => undefined);
+						if (!open && imageModalOpen) {
+							clearModalParams();
 						}
 					}}
-					open={modal === "add-image" || editingImageId !== null}
+					open={imageModalOpen}
 				/>
 				<AddPaletteModal
 					initialValues={
-						editingPaletteId ? paletteModalInitialValues : undefined
+						modal === "edit-palette" ? paletteModalInitialValues : undefined
 					}
 					onOpenChange={(open) => {
-						if (!open) {
-							setEditingPaletteId(null);
-							setModal(null).catch(() => undefined);
+						if (!open && paletteModalOpen) {
+							clearModalParams();
 						}
 					}}
-					open={modal === "add-palette" || editingPaletteId !== null}
+					open={paletteModalOpen}
 				/>
 			</div>
 			<LibrarySelectionToolbar />
@@ -146,15 +209,3 @@ export default function LibraryPage() {
 		</LibrarySelectionProvider>
 	);
 }
-
-// export default function LibraryPage() {
-// 	return (
-// 		<Suspense
-// 			fallback={
-// 				<div className="mt-2 min-h-[200px] animate-pulse rounded-md bg-muted/50" />
-// 			}
-// 		>
-// 			<LibraryPageContent />
-// 		</Suspense>
-// 	);
-// }
