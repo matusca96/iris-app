@@ -217,7 +217,12 @@ export const ImagesTab = ({
 
 	return (
 		<div className="mt-1 space-y-4 p-1">
-			<div className="flex items-center gap-2">
+			<div className="flex items-center justify-between gap-2">
+				<Button onClick={onAddImage}>
+					<HugeiconsIcon icon={ImagePlus} />
+					Adicionar imagem
+				</Button>
+
 				<ToggleGroup
 					onValueChange={(next) => {
 						const resolved = next[0];
@@ -237,11 +242,6 @@ export const ImagesTab = ({
 						Lista
 					</ToggleGroupItem>
 				</ToggleGroup>
-
-				<Button onClick={onAddImage}>
-					<HugeiconsIcon icon={ImagePlus} />
-					Adicionar imagem
-				</Button>
 			</div>
 
 			{view === "grid" ? (

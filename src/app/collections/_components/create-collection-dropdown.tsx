@@ -19,9 +19,19 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CreateEmptyCollectionModal } from "./create-empty-collection-modal";
 
-export const CreateCollectionDropdown = () => {
-	const [emptyCollectionModalOpen, setEmptyCollectionModalOpen] =
-		useState(false);
+export type CreateCollectionDropdownProps = {
+	emptyCollectionModalOpen?: boolean;
+	onEmptyCollectionModalOpenChange?: (open: boolean) => void;
+};
+
+export const CreateCollectionDropdown = ({
+	emptyCollectionModalOpen,
+	onEmptyCollectionModalOpenChange,
+}: CreateCollectionDropdownProps = {}) => {
+	const [internalOpen, setInternalOpen] = useState(false);
+	const isControlled = typeof emptyCollectionModalOpen === "boolean";
+	const modalOpen = isControlled ? emptyCollectionModalOpen : internalOpen;
+	const setModalOpen = onEmptyCollectionModalOpenChange ?? setInternalOpen;
 
 	return (
 		<>
@@ -52,15 +62,15 @@ export const CreateCollectionDropdown = () => {
 							</Link>
 						}
 					/>
-					<DropdownMenuItem onClick={() => setEmptyCollectionModalOpen(true)}>
+					<DropdownMenuItem onClick={() => setModalOpen(true)}>
 						<HugeiconsIcon icon={Folder01Icon} strokeWidth={2} />
 						Coleção vazia
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
 			<CreateEmptyCollectionModal
-				onOpenChange={setEmptyCollectionModalOpen}
-				open={emptyCollectionModalOpen}
+				onOpenChange={setModalOpen}
+				open={modalOpen}
 			/>
 		</>
 	);

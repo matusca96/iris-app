@@ -2,9 +2,18 @@
 
 import Image from "next/image";
 
-import { CreateCollectionDropdown } from "./create-collection-dropdown";
+import {
+	CreateCollectionDropdown,
+	type CreateCollectionDropdownProps,
+} from "./create-collection-dropdown";
 
-export const CollectionsEmptyState = () => (
+type CollectionsEmptyStateProps = {
+	dropdownProps?: CreateCollectionDropdownProps;
+};
+
+export const CollectionsEmptyState = ({
+	dropdownProps,
+}: CollectionsEmptyStateProps) => (
 	<div className="flex h-full min-h-[min(50vh,400px)] flex-col items-center justify-center gap-2">
 		<Image
 			alt="Logo"
@@ -16,6 +25,6 @@ export const CollectionsEmptyState = () => (
 		<p className="text-center text-lg text-muted-foreground opacity-50">
 			Ainda não há nenhuma coleção por aqui.
 		</p>
-		<CreateCollectionDropdown />
+		<CreateCollectionDropdown {...dropdownProps} />
 	</div>
 );
