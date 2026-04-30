@@ -43,6 +43,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { useContentStore } from "@/store/content";
 import { useLibrarySelection } from "../_context/library-selection-context";
+import { LibraryCommentsDialog } from "./library-comments-dialog";
 
 type ImagesTabProps = {
 	onAddImage: () => void;
@@ -111,11 +112,13 @@ const LibraryImageTileCheckbox = ({
 
 type LibraryImageTileMenuProps = {
 	item: LibraryMasonryItem;
+	onOpenComments: () => void;
 	onRequestDelete: () => void;
 };
 
 const LibraryImageTileMenu = ({
 	item,
+	onOpenComments,
 	onRequestDelete,
 }: LibraryImageTileMenuProps) => {
 	const [open, setOpen] = useState(false);
@@ -153,7 +156,11 @@ const LibraryImageTileMenu = ({
 						e.stopPropagation();
 					}}
 				>
-					<DropdownMenuItem>
+					<DropdownMenuItem
+						onClick={() => {
+							onOpenComments();
+						}}
+					>
 						<HugeiconsIcon className="size-4" icon={Comment01Icon} />
 						Ver comentários
 					</DropdownMenuItem>
@@ -184,6 +191,7 @@ export const ImagesTab = ({ onAddImage }: ImagesTabProps) => {
 	const { images, tags, deleteImage } = useContentStore();
 	const { toggleImage, selectedImageIds } = useLibrarySelection();
 	const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+	const [commentsImageId, setCommentsImageId] = useState<string | null>(null);
 
 	const pendingDeleteName = useMemo(() => {
 		if (!pendingDeleteId) {
@@ -293,6 +301,9 @@ export const ImagesTab = ({ onAddImage }: ImagesTabProps) => {
 						/>
 						<LibraryImageTileMenu
 							item={item}
+							onOpenComments={() => {
+								setCommentsImageId(item.id);
+							}}
 							onRequestDelete={() => setPendingDeleteId(item.id)}
 						/>
 					</div>
@@ -338,6 +349,17 @@ export const ImagesTab = ({ onAddImage }: ImagesTabProps) => {
 					</AlertDialogFooter>
 				</AlertDialogContent>
 			</AlertDialog>
+
+			<LibraryCommentsDialog
+				entity="images"
+				itemId={commentsImageId}
+				onOpenChange={(open) => {
+					if (!open) {
+						setCommentsImageId(null);
+					}
+				}}
+				open={commentsImageId !== null}
+			/>
 		</div>
 	) : (
 		<EmptyTabContent

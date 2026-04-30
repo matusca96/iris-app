@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import {
+	COMMENT_MAX_LENGTH,
 	type Comment,
 	ContentSchema,
 	type ContentState,
@@ -20,7 +21,43 @@ const emptyContent: ContentState = {
 	tags: [],
 };
 
-type CommentEntity = "images" | "palettes";
+export type CommentEntity = "images" | "palettes";
+
+const normalizeCommentText = (text: string): string => text.trim();
+
+const isCommentTextValid = (text: string): boolean => {
+	const t = normalizeCommentText(text);
+	return t.length > 0 && t.length <= COMMENT_MAX_LENGTH;
+};
+
+const truncateCommentTextsForMigration = (state: {
+	images: Image[];
+	palettes: Palette[];
+	groups: Group[];
+	tags: Tag[];
+}) => ({
+	...state,
+	images: state.images.map((image) => ({
+		...image,
+		comments: image.comments.map((c) => ({
+			...c,
+			text:
+				c.text.length > COMMENT_MAX_LENGTH
+					? c.text.slice(0, COMMENT_MAX_LENGTH)
+					: c.text,
+		})),
+	})),
+	palettes: state.palettes.map((palette) => ({
+		...palette,
+		comments: palette.comments.map((c) => ({
+			...c,
+			text:
+				c.text.length > COMMENT_MAX_LENGTH
+					? c.text.slice(0, COMMENT_MAX_LENGTH)
+					: c.text,
+		})),
+	})),
+});
 
 export type ImageCreateInput = Omit<Image, "id" | "comments" | "createdAt">;
 export type ImageUpdatePatch = Partial<Omit<Image, "id" | "createdAt">>;
@@ -195,9 +232,13 @@ export const useContentStore = create<ContentStore>()(
 				}));
 			},
 			addComment: (entity, entityId, text) => {
+				if (!isCommentTextValid(text)) {
+					return null;
+				}
+				const storedText = normalizeCommentText(text);
 				const comment: Comment = {
 					id: crypto.randomUUID(),
-					text,
+					text: storedText,
 					createdAt: Date.now(),
 				};
 
@@ -230,6 +271,10 @@ export const useContentStore = create<ContentStore>()(
 				return comment;
 			},
 			updateComment: (entity, entityId, commentId, text) => {
+				if (!isCommentTextValid(text)) {
+					return null;
+				}
+				const storedText = normalizeCommentText(text);
 				let updatedComment: Comment | null = null;
 
 				if (entity === "images") {
@@ -242,7 +287,7 @@ export const useContentStore = create<ContentStore>()(
 								if (c.id !== commentId) {
 									return c;
 								}
-								updatedComment = { ...c, text };
+								updatedComment = { ...c, text: storedText };
 								return updatedComment;
 							});
 							return { ...image, comments };
@@ -260,7 +305,7 @@ export const useContentStore = create<ContentStore>()(
 							if (c.id !== commentId) {
 								return c;
 							}
-							updatedComment = { ...c, text };
+							updatedComment = { ...c, text: storedText };
 							return updatedComment;
 						});
 						return { ...palette, comments };
@@ -384,15 +429,28 @@ export const useContentStore = create<ContentStore>()(
 				if (!state) {
 					return;
 				}
-				const parsed = ContentSchema.safeParse({
+				const normalized = truncateCommentTextsForMigration({
 					images: state.images,
 					palettes: state.palettes,
 					groups: state.groups,
 					tags: state.tags,
 				});
+				const parsed = ContentSchema.safeParse({
+					images: normalized.images,
+					palettes: normalized.palettes,
+					groups: normalized.groups,
+					tags: normalized.tags,
+				});
 				if (!parsed.success) {
 					useContentStore.setState(emptyContent);
+					return;
 				}
+				useContentStore.setState({
+					images: parsed.data.images,
+					palettes: parsed.data.palettes,
+					groups: parsed.data.groups,
+					tags: parsed.data.tags,
+				});
 			},
 		}
 	)

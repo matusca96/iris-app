@@ -5,9 +5,12 @@ export const oklchColorRegex =
 	/^oklch\(\d+(\.\d+)?%?\s+\d+(\.\d+)?\s+\d+(\.\d+)?\)$/;
 const hexColorRegex = /^#(?:[\da-fA-F]{3}|[\da-fA-F]{6})$/;
 
+/** Max length for comment text (UI and persisted state). */
+export const COMMENT_MAX_LENGTH = 300;
+
 export const CommentSchema = z.object({
 	id: z.string(),
-	text: z.string(),
+	text: z.string().max(COMMENT_MAX_LENGTH),
 	createdAt: z.number(),
 });
 

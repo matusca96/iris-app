@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createLocalStorageMock } from "@/lib/storage/__tests__/local-storage-mock";
+import { COMMENT_MAX_LENGTH } from "@/lib/storage/schemas";
 
 const imagePayload = {
 	name: "Example",
@@ -171,6 +172,75 @@ describe("useContentStore", () => {
 
 		deleteComment("images", image.id, commentId);
 		expect(useContentStore.getState().images[0]?.comments).toEqual([]);
+	});
+
+	it("rejects comments longer than COMMENT_MAX_LENGTH and whitespace-only text", () => {
+		const { addImage, addComment, updateComment } = useContentStore.getState();
+		const image = addImage(imagePayload);
+		const longText = "x".repeat(COMMENT_MAX_LENGTH + 1);
+
+		expect(addComment("images", image.id, longText)).toBeNull();
+		expect(addComment("images", image.id, "   ")).toBeNull();
+
+		const ok = addComment("images", image.id, "ok");
+		expect(ok).not.toBeNull();
+		if (ok === null) {
+			return;
+		}
+
+		expect(updateComment("images", image.id, ok.id, longText)).toBeNull();
+		expect(useContentStore.getState().images[0]?.comments[0]?.text).toBe("ok");
+	});
+
+	it("accepts comment text of exactly COMMENT_MAX_LENGTH characters", () => {
+		const { addImage, addComment } = useContentStore.getState();
+		const image = addImage(imagePayload);
+		const text = "x".repeat(COMMENT_MAX_LENGTH);
+		const c = addComment("images", image.id, text);
+
+		expect(c).not.toBeNull();
+		expect(c?.text.length).toBe(COMMENT_MAX_LENGTH);
+	});
+
+	it("truncates persisted comment text over COMMENT_MAX_LENGTH on rehydrate", async () => {
+		const longText = "x".repeat(COMMENT_MAX_LENGTH + 50);
+		localStorage.setItem(
+			"iris:content",
+			JSON.stringify({
+				state: {
+					images: [
+						{
+							id: "img-1",
+							name: "Test",
+							url: "https://example.com/image.png",
+							groupIds: [],
+							tags: [],
+							comments: [
+								{
+									id: "c-1",
+									text: longText,
+									createdAt: 1,
+								},
+							],
+							createdAt: 1,
+						},
+					],
+					palettes: [],
+					groups: [],
+					tags: [],
+				},
+				version: 0,
+			})
+		);
+
+		vi.resetModules();
+		const mod = await import("../content");
+		useContentStore = mod.useContentStore;
+		await useContentStore.persist.rehydrate();
+
+		expect(useContentStore.getState().images[0]?.comments[0]?.text.length).toBe(
+			COMMENT_MAX_LENGTH
+		);
 	});
 
 	it("createGroupAndAssignToItems creates group and merges groupIds", () => {
