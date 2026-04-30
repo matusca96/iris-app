@@ -27,6 +27,8 @@ type GroupSelectorProps = {
 	onSelectedGroupIdsChange: (groupIds: string[]) => void;
 	/** Ids that must stay selected and cannot be removed from chips or list. */
 	lockedGroupIds?: string[];
+	/** `id` for the chip input; use when multiple group comboboxes exist on the page. */
+	inputId?: string;
 };
 
 const mergeWithLocked = (
@@ -39,6 +41,7 @@ export const GroupSelector = ({
 	selectedGroupIds,
 	onSelectedGroupIdsChange,
 	lockedGroupIds,
+	inputId = "groups-combobox-input",
 }: GroupSelectorProps) => {
 	const [query, setQuery] = useState("");
 	const anchor = useComboboxAnchor();
@@ -89,7 +92,7 @@ export const GroupSelector = ({
 
 	return (
 		<Field>
-			<FieldLabel htmlFor="groups-combobox-input">Grupos</FieldLabel>
+			<FieldLabel htmlFor={inputId}>Grupos</FieldLabel>
 			<Combobox
 				autoHighlight
 				inputValue={query}
@@ -116,7 +119,7 @@ export const GroupSelector = ({
 								))}
 								<ComboboxChipsInput
 									className="min-w-[12rem]"
-									id="groups-combobox-input"
+									id={inputId}
 									onKeyDown={handleChipInputKeyDown}
 									placeholder="Buscar ou adicionar grupos…"
 								/>

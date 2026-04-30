@@ -22,12 +22,17 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import type { Image } from "@/lib/storage/schemas";
 import { cn } from "@/lib/utils";
 import { useContentStore } from "@/store/content";
 import { useLibrarySelection } from "../_context/library-selection-context";
 import { LibraryCommentsDialog } from "./library-comments-dialog";
 
 type ImagesTabProps = {
+	images: Image[];
+	/** True when the store has at least one image (before filters). */
+	hasItemsInStore: boolean;
+	onClearLibraryFilters: () => void;
 	onAddImage: () => void;
 	onEditImage: (id: string) => void;
 };
@@ -118,8 +123,14 @@ const LibraryImageTileMenu = ({
 	</div>
 );
 
-export const ImagesTab = ({ onAddImage, onEditImage }: ImagesTabProps) => {
-	const { images, tags, deleteImage } = useContentStore();
+export const ImagesTab = ({
+	images,
+	hasItemsInStore,
+	onClearLibraryFilters,
+	onAddImage,
+	onEditImage,
+}: ImagesTabProps) => {
+	const { tags, deleteImage } = useContentStore();
 	const { toggleImage, selectedImageIds } = useLibrarySelection();
 	const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 	const [commentsImageId, setCommentsImageId] = useState<string | null>(null);
@@ -170,7 +181,34 @@ export const ImagesTab = ({ onAddImage, onEditImage }: ImagesTabProps) => {
 		setPendingDeleteId(null);
 	};
 
-	return images.length ? (
+	if (!hasItemsInStore) {
+		return (
+			<EmptyTabContent
+				buttonText="Adicionar imagem"
+				description="Ainda não há nenhuma imagem por aqui."
+				onAdd={onAddImage}
+			/>
+		);
+	}
+
+	if (images.length === 0) {
+		return (
+			<div className="flex flex-col items-center justify-center gap-3 px-4 py-12">
+				<p className="max-w-sm text-center text-muted-foreground text-sm">
+					Nenhum resultado para os filtros ou busca atuais.
+				</p>
+				<Button
+					onClick={onClearLibraryFilters}
+					type="button"
+					variant="secondary"
+				>
+					Limpar filtros e busca
+				</Button>
+			</div>
+		);
+	}
+
+	return (
 		<div className="space-y-4 p-2">
 			<div className="flex items-center gap-2">
 				<ToggleGroup defaultValue={["grid"]} variant="outline">
@@ -270,11 +308,5 @@ export const ImagesTab = ({ onAddImage, onEditImage }: ImagesTabProps) => {
 				open={commentsImageId !== null}
 			/>
 		</div>
-	) : (
-		<EmptyTabContent
-			buttonText="Adicionar imagem"
-			description="Ainda não há nenhuma imagem por aqui."
-			onAdd={onAddImage}
-		/>
 	);
 };

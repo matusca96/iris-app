@@ -47,7 +47,13 @@ describe("ColorPalettesTab", () => {
 
 	it("renders empty state when there are no palettes", () => {
 		renderWithSelection(
-			<ColorPalettesTab onAddPalette={vi.fn()} onEditPalette={vi.fn()} />
+			<ColorPalettesTab
+				hasItemsInStore={false}
+				onAddPalette={vi.fn()}
+				onClearLibraryFilters={vi.fn()}
+				onEditPalette={vi.fn()}
+				palettes={[]}
+			/>
 		);
 
 		expect(
@@ -73,8 +79,15 @@ describe("ColorPalettesTab", () => {
 			tags: [],
 		});
 
+		const { useContentStore } = store;
 		renderWithSelection(
-			<ColorPalettesTab onAddPalette={vi.fn()} onEditPalette={vi.fn()} />
+			<ColorPalettesTab
+				hasItemsInStore
+				onAddPalette={vi.fn()}
+				onClearLibraryFilters={vi.fn()}
+				onEditPalette={vi.fn()}
+				palettes={useContentStore.getState().palettes}
+			/>
 		);
 
 		expect(screen.getByText("Warm")).toBeInTheDocument();
@@ -97,7 +110,13 @@ describe("ColorPalettesTab", () => {
 		});
 
 		renderWithSelection(
-			<ColorPalettesTab onAddPalette={vi.fn()} onEditPalette={vi.fn()} />
+			<ColorPalettesTab
+				hasItemsInStore
+				onAddPalette={vi.fn()}
+				onClearLibraryFilters={vi.fn()}
+				onEditPalette={vi.fn()}
+				palettes={store.useContentStore.getState().palettes}
+			/>
 		);
 
 		expect(screen.getByText("Primary")).toBeInTheDocument();
@@ -122,7 +141,13 @@ describe("ColorPalettesTab", () => {
 		});
 
 		renderWithSelection(
-			<ColorPalettesTab onAddPalette={vi.fn()} onEditPalette={vi.fn()} />
+			<ColorPalettesTab
+				hasItemsInStore
+				onAddPalette={vi.fn()}
+				onClearLibraryFilters={vi.fn()}
+				onEditPalette={vi.fn()}
+				palettes={store.useContentStore.getState().palettes}
+			/>
 		);
 
 		expect(
