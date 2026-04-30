@@ -38,7 +38,15 @@ const libraryModalParser = parseAsStringLiteral([
 
 export const LibraryPageClient = () => {
 	const [
-		{ modal, id: modalEntityId, tab, q, groups: urlGroupIds, tags: urlTagIds },
+		{
+			modal,
+			id: modalEntityId,
+			tab,
+			q,
+			groups: urlGroupIds,
+			tags: urlTagIds,
+			view,
+		},
 		setParams,
 	] = useQueryStates(
 		{
@@ -48,6 +56,7 @@ export const LibraryPageClient = () => {
 			q: parseAsString.withDefault(""),
 			groups: parseAsArrayOf(parseAsString, ",").withDefault([]),
 			tags: parseAsArrayOf(parseAsString, ",").withDefault([]),
+			view: parseAsStringLiteral(["grid", "list"]).withDefault("grid"),
 		},
 		{ history: "replace" }
 	);
@@ -240,6 +249,10 @@ export const LibraryPageClient = () => {
 									() => undefined
 								);
 							}}
+							onViewChange={(next) => {
+								setParams({ view: next }).catch(() => undefined);
+							}}
+							view={view}
 						/>
 					</TabsContent>
 					<TabsContent

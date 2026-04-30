@@ -27,6 +27,9 @@ import { cn } from "@/lib/utils";
 import { useContentStore } from "@/store/content";
 import { useLibrarySelection } from "../_context/library-selection-context";
 import { LibraryCommentsDialog } from "./library-comments-dialog";
+import { LibraryImageListRow } from "./library-image-list-row";
+
+export type LibraryImageViewMode = "grid" | "list";
 
 type ImagesTabProps = {
 	images: Image[];
@@ -35,6 +38,8 @@ type ImagesTabProps = {
 	onClearLibraryFilters: () => void;
 	onAddImage: () => void;
 	onEditImage: (id: string) => void;
+	view: LibraryImageViewMode;
+	onViewChange: (view: LibraryImageViewMode) => void;
 };
 
 type LibraryMasonryItem = MasonryGalleryItemBase & {
@@ -129,6 +134,8 @@ export const ImagesTab = ({
 	onClearLibraryFilters,
 	onAddImage,
 	onEditImage,
+	view,
+	onViewChange,
 }: ImagesTabProps) => {
 	const { tags, deleteImage } = useContentStore();
 	const { toggleImage, selectedImageIds } = useLibrarySelection();
@@ -211,7 +218,16 @@ export const ImagesTab = ({
 	return (
 		<div className="space-y-4 p-2">
 			<div className="flex items-center gap-2">
-				<ToggleGroup defaultValue={["grid"]} variant="outline">
+				<ToggleGroup
+					onValueChange={(next) => {
+						const resolved = next[0];
+						onViewChange(
+							resolved === "grid" || resolved === "list" ? resolved : "grid"
+						);
+					}}
+					value={[view]}
+					variant="outline"
+				>
 					<ToggleGroupItem value="grid">
 						<HugeiconsIcon icon={LayoutGridIcon} />
 						Grid
@@ -228,57 +244,78 @@ export const ImagesTab = ({
 				</Button>
 			</div>
 
-			<MasonryGallery
-				getItemAriaLabel={(item) =>
-					`${item.name}, ${item.groupCount} grupos, ${item.commentCount} comentários`
-				}
-				isTileSelected={(item) => selectedImageIds.has(item.id)}
-				items={masonryItems}
-				onItemClick={(item) => {
-					toggleImage(item.id);
-				}}
-				renderFooter={(item) => (
-					<div className="space-y-2 border-border/60 border-t bg-foreground/5 px-2.5 py-2">
-						<p className="truncate font-medium text-foreground text-xs">
-							{item.name}
-						</p>
-						<div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
-							<span className="inline-flex items-center gap-1">
-								<HugeiconsIcon
-									className="size-3.5 shrink-0"
-									icon={FolderLibraryIcon}
-								/>
-								{item.groupCount}
-							</span>
-							<span className="inline-flex items-center gap-1">
-								<HugeiconsIcon
-									className="size-3.5 shrink-0"
-									icon={Comment01Icon}
-								/>
-								{item.commentCount}
-							</span>
+			{view === "grid" ? (
+				<MasonryGallery
+					getItemAriaLabel={(item) =>
+						`${item.name}, ${item.groupCount} grupos, ${item.commentCount} comentários`
+					}
+					isTileSelected={(item) => selectedImageIds.has(item.id)}
+					items={masonryItems}
+					onItemClick={(item) => {
+						toggleImage(item.id);
+					}}
+					renderFooter={(item) => (
+						<div className="space-y-2 border-border/60 border-t bg-foreground/5 px-2.5 py-2">
+							<p className="truncate font-medium text-foreground text-xs">
+								{item.name}
+							</p>
+							<div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+								<span className="inline-flex items-center gap-1">
+									<HugeiconsIcon
+										className="size-3.5 shrink-0"
+										icon={FolderLibraryIcon}
+									/>
+									{item.groupCount}
+								</span>
+								<span className="inline-flex items-center gap-1">
+									<HugeiconsIcon
+										className="size-3.5 shrink-0"
+										icon={Comment01Icon}
+									/>
+									{item.commentCount}
+								</span>
+							</div>
+							<EntityTagsPreview tags={item.tags} />
 						</div>
-						<EntityTagsPreview tags={item.tags} />
-					</div>
-				)}
-				renderOverlay={(item) => (
-					<div className="size-full from-background/0 to-background/35 transition-colors hover:bg-radial">
-						<LibraryImageTileCheckbox
-							item={item}
-							onToggle={() => toggleImage(item.id)}
-							selected={selectedImageIds.has(item.id)}
-						/>
-						<LibraryImageTileMenu
-							item={item}
-							onEditImage={onEditImage}
-							onOpenComments={() => {
-								setCommentsImageId(item.id);
-							}}
+					)}
+					renderOverlay={(item) => (
+						<div className="size-full from-background/0 to-background/35 transition-colors hover:bg-radial">
+							<LibraryImageTileCheckbox
+								item={item}
+								onToggle={() => toggleImage(item.id)}
+								selected={selectedImageIds.has(item.id)}
+							/>
+							<LibraryImageTileMenu
+								item={item}
+								onEditImage={onEditImage}
+								onOpenComments={() => {
+									setCommentsImageId(item.id);
+								}}
+								onRequestDelete={() => setPendingDeleteId(item.id)}
+							/>
+						</div>
+					)}
+				/>
+			) : (
+				<div className="flex flex-col gap-2">
+					{masonryItems.map((item) => (
+						<LibraryImageListRow
+							commentCount={item.commentCount}
+							groupCount={item.groupCount}
+							imageId={item.id}
+							imageUrl={item.imageUrl}
+							key={item.id}
+							name={item.name}
+							onEdit={() => onEditImage(item.id)}
+							onOpenComments={() => setCommentsImageId(item.id)}
 							onRequestDelete={() => setPendingDeleteId(item.id)}
+							onSelectionToggle={() => toggleImage(item.id)}
+							selected={selectedImageIds.has(item.id)}
+							tags={item.tags}
 						/>
-					</div>
-				)}
-			/>
+					))}
+				</div>
+			)}
 
 			<LibraryDeleteItemDialog
 				confirmLabel="Excluir imagem"
