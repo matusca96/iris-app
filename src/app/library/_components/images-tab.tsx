@@ -216,7 +216,7 @@ export const ImagesTab = ({
 	}
 
 	return (
-		<div className="space-y-4 p-2">
+		<div className="mt-1 space-y-4 p-1">
 			<div className="flex items-center gap-2">
 				<ToggleGroup
 					onValueChange={(next) => {
@@ -246,6 +246,7 @@ export const ImagesTab = ({
 
 			{view === "grid" ? (
 				<MasonryGallery
+					className="py-1"
 					getItemAriaLabel={(item) =>
 						`${item.name}, ${item.groupCount} grupos, ${item.commentCount} comentários`
 					}

@@ -88,15 +88,15 @@ export const ColorPalettesTab = ({
 	}
 
 	return (
-		<div className="flex h-full flex-col space-y-4 overflow-x-hidden">
-			<div className="flex items-center gap-2">
+		<div className="space-y-4 overflow-x-hidden">
+			<div className="mt-2 flex items-center gap-2">
 				<Button onClick={onAddPalette} type="button">
 					<HugeiconsIcon icon={PaintBoardIcon} />
 					Adicionar paleta de cores
 				</Button>
 			</div>
 
-			<div className="grid grid-cols-1 gap-4 overflow-x-hidden p-2 md:grid-cols-2">
+			<div className="grid grid-cols-1 gap-4 overflow-x-hidden p-1 md:grid-cols-2">
 				{palettes.map((palette) => {
 					const resolvedTags = palette.tags
 						.map((tagId) => tagById.get(tagId))
