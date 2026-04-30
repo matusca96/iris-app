@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Header } from "@/components/header";
 import { ThemeProvider } from "@/components/theme-provider";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 const ebGaramondHeading = EB_Garamond({
@@ -56,6 +57,7 @@ export default async function RootLayout({
 								{children}
 							</SidebarInset>
 						</SidebarProvider>
+						<Toaster />
 					</ThemeProvider>
 				</NuqsAdapter>
 			</body>

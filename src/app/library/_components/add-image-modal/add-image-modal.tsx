@@ -10,6 +10,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 
 import { generateImageTagsAction } from "@/app/library/actions";
 import { GroupSelector } from "@/components/group-selector";
@@ -201,11 +202,16 @@ export const AddImageModal = ({
 		const gids = groupIds ?? [];
 
 		if (initialValues?.id) {
-			updateImage(initialValues.id, {
+			const updatedImage = updateImage(initialValues.id, {
 				name: validated.trimmedName,
 				groupIds: gids,
 				tags: nextTagIds,
 			});
+			if (!updatedImage) {
+				toast.error("Nao foi possivel editar a imagem.");
+				return;
+			}
+			toast.success("Imagem editada com sucesso.");
 		} else {
 			addImage({
 				name: validated.trimmedName,
@@ -213,6 +219,7 @@ export const AddImageModal = ({
 				groupIds: gids,
 				tags: nextTagIds,
 			});
+			toast.success("Imagem criada com sucesso.");
 		}
 
 		onOpenChange(false);

@@ -1,8 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +30,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 export const CreateGroupFromSelectionModal = () => {
+	const router = useRouter();
 	const {
 		createGroupModalOpen,
 		closeCreateGroupModal,
@@ -74,13 +78,15 @@ export const CreateGroupFromSelectionModal = () => {
 	};
 
 	const onSubmit = form.handleSubmit((values) => {
-		createGroupAndAssignToItems(values.name, {
+		const createdGroup = createGroupAndAssignToItems(values.name, {
 			imageIds: [...selectedImageIds],
 			paletteIds: [...selectedPaletteIds],
 		});
+		toast.success("Coleção criada com sucesso.");
 		form.reset();
 		closeCreateGroupModal();
 		clearSelection();
+		router.push(`/collections/${createdGroup.id}` as Route);
 	});
 
 	return (

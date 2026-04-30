@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -103,6 +104,7 @@ export const AddToCollectionFromSelectionModal = () => {
 			});
 			return;
 		}
+		toast.success("Itens adicionados à coleção com sucesso.");
 		form.reset();
 		closeAddToCollectionModal();
 		clearSelection();

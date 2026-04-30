@@ -10,6 +10,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { AddImageModal } from "@/app/library/_components/add-image-modal/add-image-modal";
 import { AddPaletteModal } from "@/app/library/_components/add-palette-modal/add-palette-modal";
@@ -62,6 +63,7 @@ export default function CollectionPage() {
 
 	const handleDeleteConfirm = () => {
 		deleteGroup(collectionId);
+		toast.success("Coleção excluída com sucesso.");
 		router.push("/collections" as Route);
 	};
 

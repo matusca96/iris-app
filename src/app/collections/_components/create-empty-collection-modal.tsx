@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +50,7 @@ export const CreateEmptyCollectionModal = ({
 
 	const onSubmit = (values: CreateEmptyCollectionFormValues) => {
 		addGroup(values.name);
+		toast.success("Coleção criada com sucesso.");
 		onOpenChange(false);
 	};
 

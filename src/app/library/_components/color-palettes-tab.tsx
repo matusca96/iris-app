@@ -3,6 +3,7 @@
 import { PaintBoardIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { EmptyTabContent } from "@/components/empty-tab-content";
 import { LibraryDeleteItemDialog } from "@/components/library-delete-item-dialog";
@@ -57,6 +58,7 @@ export const ColorPalettesTab = ({
 			togglePalette(id);
 		}
 		deletePalette(id);
+		toast.success("Paleta excluida com sucesso.");
 		setPendingDeleteId(null);
 	};
 

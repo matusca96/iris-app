@@ -9,6 +9,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { EmptyTabContent } from "@/components/empty-tab-content";
 import { EntityTagsPreview } from "@/components/entity-tags-preview";
@@ -185,6 +186,7 @@ export const ImagesTab = ({
 			toggleImage(id);
 		}
 		deleteImage(id);
+		toast.success("Imagem excluida com sucesso.");
 		setPendingDeleteId(null);
 	};
 

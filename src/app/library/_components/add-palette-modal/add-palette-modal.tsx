@@ -5,6 +5,7 @@ import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { toast } from "sonner";
 
 import { findTagByNormalizedName } from "@/app/library/_components/add-image-modal/add-image-modal.helpers";
 import { GroupSelector } from "@/components/group-selector";
@@ -190,9 +191,15 @@ export const AddPaletteModal = ({
 		};
 
 		if (initialValues?.id) {
-			updatePalette(initialValues.id, payload);
+			const updatedPalette = updatePalette(initialValues.id, payload);
+			if (!updatedPalette) {
+				toast.error("Nao foi possivel editar a paleta.");
+				return;
+			}
+			toast.success("Paleta editada com sucesso.");
 		} else {
 			addPalette(payload);
+			toast.success("Paleta criada com sucesso.");
 		}
 
 		onOpenChange(false);
