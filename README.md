@@ -1,5 +1,9 @@
 # Iris.Studio
 
+<p align="center">
+  <img src="./public/logo.png" alt="Iris.Studio logo" width="100" />
+</p>
+
 A personal creative asset manager. Organize images and color palettes into tagged, grouped collections — with AI-powered tag suggestions and a fully client-side architecture.
 
 Built as a challenge project using Next.js 16, Zustand, Tailwind v4, and the Vercel AI SDK with GitHub Models.
