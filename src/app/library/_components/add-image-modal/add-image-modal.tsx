@@ -7,7 +7,7 @@ import {
 	Loading01Icon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { GroupSelector } from "@/components/group-selector";
@@ -29,6 +29,7 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
+import { mergeModalGroupIds } from "@/lib/merge-modal-group-ids";
 import { useContentStore } from "@/store/content";
 import {
 	findTagByNormalizedName,
@@ -36,6 +37,7 @@ import {
 } from "./add-image-modal.helpers";
 import {
 	type AddImageFormValues,
+	type AddImageModalInitialValues,
 	addImageFormSchema,
 } from "./add-image-modal.schema";
 import { PreviewPanel } from "./preview-panel";
@@ -44,12 +46,21 @@ import { useImagePreview } from "./use-image-preview";
 type AddImageModalProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	defaultGroupIds?: string[];
+	lockedGroupIds?: string[];
+	initialValues?: AddImageModalInitialValues;
 };
 
-export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
+export const AddImageModal = ({
+	open,
+	onOpenChange,
+	defaultGroupIds,
+	lockedGroupIds,
+	initialValues,
+}: AddImageModalProps) => {
 	const [tagQuery, setTagQuery] = useState("");
 
-	const { groups, addImage, addTag } = useContentStore();
+	const { groups, addImage, addTag, updateImage } = useContentStore();
 
 	const form = useForm<AddImageFormValues>({
 		defaultValues: {
@@ -75,12 +86,57 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 		resetPreview();
 	}, [form, resetPreview]);
 
+	const openPropsRef = useRef({
+		defaultGroupIds,
+		lockedGroupIds,
+		initialValues,
+	});
+	openPropsRef.current = { defaultGroupIds, lockedGroupIds, initialValues };
+
 	useEffect(() => {
 		if (!open) {
 			resetForm();
 			return;
 		}
-	}, [open, resetForm]);
+
+		const {
+			defaultGroupIds: dg,
+			lockedGroupIds: lg,
+			initialValues: iv,
+		} = openPropsRef.current;
+
+		const merged = mergeModalGroupIds(dg, lg, iv?.groupIds);
+
+		if (iv) {
+			const { id: _id, ...rest } = iv;
+			form.reset({ ...rest, groupIds: merged });
+		} else {
+			form.reset({
+				name: "",
+				url: "",
+				tags: [],
+				groupIds: merged,
+			});
+		}
+		setTagQuery("");
+		resetPreview();
+	}, [open, resetForm, resetPreview]);
+
+	const lockedCollectionName =
+		lockedGroupIds && lockedGroupIds.length > 0
+			? groups.find((g) => g.id === lockedGroupIds[0])?.name
+			: undefined;
+
+	const getDialogTitle = () => {
+		if (initialValues?.id) {
+			return "Editar imagem";
+		}
+		if (lockedCollectionName) {
+			return `Adicionar imagem à ${lockedCollectionName}`;
+		}
+		return "Adicionar imagem";
+	};
+	const dialogTitle = getDialogTitle();
 
 	const validateBeforeSubmit = async (values: AddImageFormValues) => {
 		const trimmedName = values.name.trim();
@@ -96,16 +152,12 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 		return { trimmedName, trimmedUrl };
 	};
 
-	const onSubmit = async (values: AddImageFormValues) => {
-		const validated = await validateBeforeSubmit(values);
-		if (!validated) {
-			return;
-		}
-
+	const resolveTagsToIds = (): string[] => {
 		const nextTagIds: string[] = [];
 		const latestTags = useContentStore.getState().tags;
+		const tagList = tags ?? [];
 
-		for (const tag of tags) {
+		for (const tag of tagList) {
 			if (!tag.isNew) {
 				nextTagIds.push(tag.id);
 				continue;
@@ -121,12 +173,33 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 			nextTagIds.push(createdTag.id);
 		}
 
-		addImage({
-			name: validated.trimmedName,
-			url: validated.trimmedUrl,
-			groupIds,
-			tags: nextTagIds,
-		});
+		return nextTagIds;
+	};
+
+	const onSubmit = async (values: AddImageFormValues) => {
+		const validated = await validateBeforeSubmit(values);
+		if (!validated) {
+			return;
+		}
+
+		const nextTagIds = resolveTagsToIds();
+		const gids = groupIds ?? [];
+
+		if (initialValues?.id) {
+			updateImage(initialValues.id, {
+				name: validated.trimmedName,
+				url: validated.trimmedUrl,
+				groupIds: gids,
+				tags: nextTagIds,
+			});
+		} else {
+			addImage({
+				name: validated.trimmedName,
+				url: validated.trimmedUrl,
+				groupIds: gids,
+				tags: nextTagIds,
+			});
+		}
 
 		onOpenChange(false);
 	};
@@ -138,7 +211,7 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 		<Dialog onOpenChange={onOpenChange} open={open}>
 			<DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto p-0 sm:max-w-3xl">
 				<DialogHeader className="px-6 pt-6">
-					<DialogTitle className="text-xl">Adicionar imagem</DialogTitle>
+					<DialogTitle className="text-xl">{dialogTitle}</DialogTitle>
 					<DialogDescription>
 						Insira a URL para validar e visualizar antes de salvar na
 						biblioteca.
@@ -207,21 +280,18 @@ export const AddImageModal = ({ open, onOpenChange }: AddImageModalProps) => {
 
 					<GroupSelector
 						groups={groups}
-						onToggleGroup={(groupId) => {
-							const current = form.getValues("groupIds");
-							if (current.includes(groupId)) {
-								return current.filter((id) => id !== groupId);
-							}
-							return [...current, groupId];
+						lockedGroupIds={lockedGroupIds}
+						onSelectedGroupIdsChange={(next) => {
+							form.setValue("groupIds", next, { shouldValidate: true });
 						}}
-						selectedGroupIds={groupIds}
+						selectedGroupIds={groupIds ?? []}
 					/>
 
 					<TagSelector
-						onTagsChange={(tags) => {
-							form.setValue("tags", tags);
+						onTagsChange={(nextTags) => {
+							form.setValue("tags", nextTags);
 						}}
-						selectedTags={tags}
+						selectedTags={tags ?? []}
 						setTagQuery={setTagQuery}
 						tagQuery={tagQuery}
 					/>

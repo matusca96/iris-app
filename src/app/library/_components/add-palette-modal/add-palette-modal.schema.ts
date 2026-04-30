@@ -17,3 +17,8 @@ export const addPaletteFormSchema = z.object({
 });
 
 export type AddPaletteFormValues = z.infer<typeof addPaletteFormSchema>;
+
+/** `id` present means edit mode (form fields omit it on reset). */
+export type AddPaletteModalInitialValues = AddPaletteFormValues & {
+	id?: string;
+};

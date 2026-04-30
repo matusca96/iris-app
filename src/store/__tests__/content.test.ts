@@ -75,7 +75,7 @@ describe("useContentStore", () => {
 		expect(useContentStore.getState().palettes).toEqual([]);
 	});
 
-	it("manages groups and tags without cascading to items", () => {
+	it("deletes a group and removes its id from image groupIds; tags unchanged on group delete", () => {
 		const { addGroup, addTag, addImage, deleteGroup, deleteTag } =
 			useContentStore.getState();
 		const group = addGroup("G1");
@@ -86,10 +86,33 @@ describe("useContentStore", () => {
 		deleteTag(tag.id);
 
 		const image = useContentStore.getState().images[0];
-		expect(image?.groupIds).toEqual([group.id]);
+		expect(image?.groupIds).toEqual([]);
 		expect(image?.tags).toEqual([tag.id]);
 		expect(useContentStore.getState().groups).toEqual([]);
 		expect(useContentStore.getState().tags).toEqual([]);
+	});
+
+	it("deleteGroup strips group id from images and palettes", () => {
+		const { addGroup, addImage, addPalette, deleteGroup } =
+			useContentStore.getState();
+		const g1 = addGroup("A");
+		const g2 = addGroup("B");
+		const image = addImage({
+			...imagePayload,
+			groupIds: [g1.id, g2.id],
+		});
+		const palette = addPalette({
+			...palettePayload,
+			groupIds: [g1.id],
+		});
+
+		deleteGroup(g1.id);
+
+		expect(useContentStore.getState().groups.map((g) => g.id)).toEqual([g2.id]);
+		expect(useContentStore.getState().images[0]?.groupIds).toEqual([g2.id]);
+		expect(useContentStore.getState().palettes[0]?.groupIds).toEqual([]);
+		expect(useContentStore.getState().images[0]?.id).toBe(image.id);
+		expect(useContentStore.getState().palettes[0]?.id).toBe(palette.id);
 	});
 
 	it("deleteImage removes item and its associations implicitly", () => {

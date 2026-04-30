@@ -10,3 +10,6 @@ export const addImageFormSchema = z.object({
 });
 
 export type AddImageFormValues = z.infer<typeof addImageFormSchema>;
+
+/** `id` present means edit mode (form fields omit it on reset). */
+export type AddImageModalInitialValues = AddImageFormValues & { id?: string };

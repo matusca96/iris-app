@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -31,8 +32,11 @@ export const CollectionCard = ({
 						{imageCount} imagens · {paletteCount} paletas
 					</p>
 					<Button
+						nativeButton={false}
 						render={
-							<Link href={`/collections/${group.id}`}>Abrir coleção</Link>
+							<Link href={`/collections/${group.id}` as Route}>
+								Abrir coleção
+							</Link>
 						}
 						size="sm"
 						type="button"

@@ -13,12 +13,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AddImageModal } from "../add-image-modal";
 import type { TagOption } from "../add-image-modal.helpers";
+import type { AddImageModalInitialValues } from "../add-image-modal.schema";
 
 const FIELD_NAME_URL = /URL da imagem/i;
 const FIELD_NAME_IMAGE = /Nome/i;
 const BUTTON_SUBMIT_LABEL = /salvar imagem/i;
+const TITLE_ADD_TO_SUMMER = /Adicionar imagem à Verão/;
+const GROUP_COMBO_PLACEHOLDER = /Buscar ou adicionar grupos/i;
 
-const checkImageUrlMock = vi.hoisted(() => vi.fn());
+/** Stable fn refs — new `vi.fn()` each render would churn `resetPreview` and retrigger modal effects forever. */
+const imagePreviewMocks = vi.hoisted(() => ({
+	checkImageUrl: vi.fn(),
+	resetPreview: vi.fn(),
+}));
 
 const tagSetup = vi.hoisted(() => ({
 	getTagsForMock: (): TagOption[] => [],
@@ -26,10 +33,10 @@ const tagSetup = vi.hoisted(() => ({
 
 vi.mock("../use-image-preview", () => ({
 	useImagePreview: () => ({
-		checkImageUrl: checkImageUrlMock,
+		checkImageUrl: imagePreviewMocks.checkImageUrl,
 		previewStatus: "idle" as const,
 		previewUrl: "",
-		resetPreview: vi.fn(),
+		resetPreview: imagePreviewMocks.resetPreview,
 	}),
 }));
 
@@ -48,7 +55,7 @@ vi.mock("@/components/tag-selector", () => ({
 			if (tags.length > 0) {
 				onTagsChange(tags);
 			}
-		}, [onTagsChange]);
+		}, []);
 
 		return null;
 	},
@@ -68,8 +75,34 @@ const getDialogNameInput = (): HTMLInputElement => {
 	}) as HTMLInputElement;
 };
 
-const renderOpenModal = async (onOpenChange = vi.fn()) => {
-	render(<AddImageModal onOpenChange={onOpenChange} open />);
+type RenderModalOptions = {
+	onOpenChange?: (open: boolean) => void;
+	defaultGroupIds?: string[];
+	lockedGroupIds?: string[];
+	initialValues?: AddImageModalInitialValues;
+};
+
+const renderOpenModal = async (
+	onOpenChangeOrOptions?:
+		| RenderModalOptions["onOpenChange"]
+		| RenderModalOptions
+) => {
+	const options: RenderModalOptions =
+		typeof onOpenChangeOrOptions === "function"
+			? { onOpenChange: onOpenChangeOrOptions }
+			: { ...(onOpenChangeOrOptions ?? {}) };
+
+	const onOpenChange = options.onOpenChange ?? vi.fn();
+
+	render(
+		<AddImageModal
+			defaultGroupIds={options.defaultGroupIds}
+			initialValues={options.initialValues}
+			lockedGroupIds={options.lockedGroupIds}
+			onOpenChange={onOpenChange}
+			open
+		/>
+	);
 	const user = userEvent.setup();
 	await waitFor(() => {
 		expect(screen.getByRole("dialog")).toBeVisible();
@@ -83,8 +116,8 @@ afterEach(() => cleanup());
 describe("AddImageModal", () => {
 	beforeEach(async () => {
 		tagSetup.getTagsForMock = () => [];
-		checkImageUrlMock.mockReset();
-		checkImageUrlMock.mockResolvedValue("preview-ready");
+		imagePreviewMocks.checkImageUrl.mockReset();
+		imagePreviewMocks.checkImageUrl.mockResolvedValue("preview-ready");
 
 		localStorage.clear();
 		const mod = await import("@/store/content");
@@ -104,11 +137,11 @@ describe("AddImageModal", () => {
 
 		expect(screen.getByText("Nome obrigatório.")).toBeInTheDocument();
 		expect(screen.getByText("URL obrigatória.")).toBeInTheDocument();
-		expect(checkImageUrlMock).not.toHaveBeenCalled();
+		expect(imagePreviewMocks.checkImageUrl).not.toHaveBeenCalled();
 	});
 
 	it("shows an error when remote image validation fails", async () => {
-		checkImageUrlMock.mockResolvedValue("not-image");
+		imagePreviewMocks.checkImageUrl.mockResolvedValue("not-image");
 		const { user } = await renderOpenModal();
 
 		await user.type(getDialogUrlInput(), "https://example.com/pic.jpg");
@@ -129,7 +162,7 @@ describe("AddImageModal", () => {
 		const store = await import("@/store/content");
 
 		tagSetup.getTagsForMock = () => [];
-		checkImageUrlMock.mockResolvedValue("preview-ready");
+		imagePreviewMocks.checkImageUrl.mockResolvedValue("preview-ready");
 
 		const spy = vi.spyOn(store.useContentStore.getState(), "addImage");
 
@@ -231,5 +264,107 @@ describe("AddImageModal", () => {
 
 		addTagSpy.mockRestore();
 		addImageSpy.mockRestore();
+	});
+
+	it("presets merged group ids and shows collection title when locked", async () => {
+		const store = await import("@/store/content");
+		const gSummer = store.useContentStore.getState().addGroup("Verão");
+		store.useContentStore.getState().addGroup("Inverno");
+
+		render(
+			<AddImageModal
+				defaultGroupIds={[gSummer.id]}
+				lockedGroupIds={[gSummer.id]}
+				onOpenChange={vi.fn()}
+				open
+			/>
+		);
+
+		await waitFor(() => {
+			expect(screen.getByRole("dialog")).toBeVisible();
+		});
+
+		const veraoChip = screen
+			.getByText("Verão")
+			.closest("[data-slot=combobox-chip]");
+		expect(veraoChip).toHaveAttribute("data-locked");
+
+		const user = userEvent.setup();
+		await user.click(screen.getByPlaceholderText(GROUP_COMBO_PLACEHOLDER));
+		await waitFor(() => {
+			expect(screen.getByText("Inverno")).toBeVisible();
+		});
+
+		expect(screen.getByText(TITLE_ADD_TO_SUMMER)).toBeInTheDocument();
+	});
+
+	it("keeps a locked group selected when its chip is clicked", async () => {
+		const store = await import("@/store/content");
+		const gSummer = store.useContentStore.getState().addGroup("Verão");
+		store.useContentStore.getState().addGroup("Inverno");
+
+		render(
+			<AddImageModal
+				defaultGroupIds={[gSummer.id]}
+				lockedGroupIds={[gSummer.id]}
+				onOpenChange={vi.fn()}
+				open
+			/>
+		);
+
+		await waitFor(() => expect(screen.getByRole("dialog")).toBeVisible());
+
+		const user = userEvent.setup();
+
+		const veraoInChip = screen
+			.getAllByText("Verão")
+			.find((el) => el.closest("[data-slot=combobox-chip]"));
+		expect(veraoInChip).toBeDefined();
+		const veraoChip = veraoInChip?.closest("[data-slot=combobox-chip]");
+		expect(veraoChip).toHaveAttribute("data-locked");
+
+		await user.click(veraoInChip as HTMLElement);
+
+		const stillChip = screen
+			.getAllByText("Verão")
+			.find((el) => el.closest("[data-slot=combobox-chip]"))
+			?.closest("[data-slot=combobox-chip]");
+		expect(stillChip).toHaveAttribute("data-locked");
+	});
+
+	it("calls updateImage when initialValues includes id", async () => {
+		const store = await import("@/store/content");
+
+		const updateSpy = vi.spyOn(store.useContentStore.getState(), "updateImage");
+		const addSpy = vi.spyOn(store.useContentStore.getState(), "addImage");
+
+		imagePreviewMocks.checkImageUrl.mockResolvedValue("preview-ready");
+
+		const { user } = await renderOpenModal({
+			initialValues: {
+				groupIds: [],
+				id: "existing-img-id",
+				name: "Old",
+				tags: [],
+				url: "https://example.com/original.png",
+			},
+		});
+
+		await user.clear(getDialogNameInput());
+		await user.type(getDialogNameInput(), "Renamed");
+		await user.click(screen.getByRole("button", { name: BUTTON_SUBMIT_LABEL }));
+
+		await waitFor(() => expect(updateSpy).toHaveBeenCalledTimes(1));
+		expect(updateSpy).toHaveBeenCalledWith(
+			"existing-img-id",
+			expect.objectContaining({
+				name: "Renamed",
+				url: "https://example.com/original.png",
+			})
+		);
+		expect(addSpy).not.toHaveBeenCalled();
+
+		updateSpy.mockRestore();
+		addSpy.mockRestore();
 	});
 });

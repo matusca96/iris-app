@@ -40,7 +40,7 @@ type ContentActions = {
 	deletePalette: (id: string) => void;
 	addGroup: (name: string) => Group;
 	updateGroup: (id: string, patch: GroupUpdatePatch) => Group | null;
-	/** Does not mutate images/palettes; items may keep stale ids in groupIds. */
+	/** Removes the group and strips its id from every image and palette `groupIds`. */
 	deleteGroup: (id: string) => void;
 	addTag: (name: string, color: string) => Tag;
 	updateTag: (id: string, patch: TagUpdatePatch) => Tag | null;
@@ -157,6 +157,14 @@ export const useContentStore = create<ContentStore>()(
 			deleteGroup: (id) => {
 				set((state) => ({
 					groups: state.groups.filter((group) => group.id !== id),
+					images: state.images.map((image) => ({
+						...image,
+						groupIds: image.groupIds.filter((g) => g !== id),
+					})),
+					palettes: state.palettes.map((palette) => ({
+						...palette,
+						groupIds: palette.groupIds.filter((g) => g !== id),
+					})),
 				}));
 			},
 			addTag: (name, color) => {

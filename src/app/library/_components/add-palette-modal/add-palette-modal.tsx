@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Delete02Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { findTagByNormalizedName } from "@/app/library/_components/add-image-modal/add-image-modal.helpers";
@@ -26,6 +26,7 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { mergeModalGroupIds } from "@/lib/merge-modal-group-ids";
 import { useContentStore } from "@/store/content";
 import {
 	DEFAULT_WORKING_OKLCH,
@@ -35,6 +36,7 @@ import {
 } from "./add-palette-modal.helpers";
 import {
 	type AddPaletteFormValues,
+	type AddPaletteModalInitialValues,
 	addPaletteFormSchema,
 } from "./add-palette-modal.schema";
 import { ColorFormatInputs } from "./color-format-inputs";
@@ -43,18 +45,24 @@ import { OklchPicker } from "./oklch-picker";
 type AddPaletteModalProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	defaultGroupIds?: string[];
+	lockedGroupIds?: string[];
+	initialValues?: AddPaletteModalInitialValues;
 };
 
 export const AddPaletteModal = ({
 	open,
 	onOpenChange,
+	defaultGroupIds,
+	lockedGroupIds,
+	initialValues,
 }: AddPaletteModalProps) => {
 	const [tagQuery, setTagQuery] = useState("");
 	const [workingColor, setWorkingColor] = useState<OklchTriplet>(
 		DEFAULT_WORKING_OKLCH
 	);
 
-	const { groups, addPalette, addTag } = useContentStore();
+	const { groups, addPalette, addTag, updatePalette } = useContentStore();
 
 	const form = useForm<AddPaletteFormValues>({
 		defaultValues: {
@@ -73,11 +81,68 @@ export const AddPaletteModal = ({
 
 	const formats = tripletToDisplayFormats(workingColor);
 
-	const resetAll = () => {
+	const resetAll = useCallback(() => {
 		form.reset();
 		setTagQuery("");
 		setWorkingColor(DEFAULT_WORKING_OKLCH);
+	}, [form]);
+
+	const openPropsRef = useRef({
+		defaultGroupIds,
+		lockedGroupIds,
+		initialValues,
+	});
+	openPropsRef.current = { defaultGroupIds, lockedGroupIds, initialValues };
+
+	useEffect(() => {
+		if (!open) {
+			resetAll();
+			return;
+		}
+
+		const {
+			defaultGroupIds: dg,
+			lockedGroupIds: lg,
+			initialValues: iv,
+		} = openPropsRef.current;
+
+		const merged = mergeModalGroupIds(dg, lg, iv?.groupIds);
+
+		if (iv) {
+			const { id: _id, ...rest } = iv;
+			form.reset({ ...rest, groupIds: merged });
+		} else {
+			form.reset({
+				name: "",
+				colors: [],
+				tags: [],
+				groupIds: merged,
+			});
+		}
+		setTagQuery("");
+		setWorkingColor(DEFAULT_WORKING_OKLCH);
+	}, [open, resetAll]);
+
+	const lockedCollectionName =
+		lockedGroupIds && lockedGroupIds.length > 0
+			? groups.find((g) => g.id === lockedGroupIds[0])?.name
+			: undefined;
+
+	const getDialogTitle = () => {
+		if (initialValues?.id) {
+			return "Editar paleta de cores";
+		}
+		if (lockedCollectionName) {
+			return `Adicionar paleta à ${lockedCollectionName}`;
+		}
+		return "Adicionar paleta de cores";
 	};
+	const dialogTitle = getDialogTitle();
+
+	const alreadyExists = getIsCurrentColorAlreadyAdded(
+		colors ?? [],
+		workingColor
+	);
 
 	const appendCurrentColor = () => {
 		if (alreadyExists) {
@@ -93,8 +158,8 @@ export const AddPaletteModal = ({
 		});
 	};
 
-	const removeColorById = (id: string) => {
-		const next = (colors ?? []).filter((c) => c.id !== id);
+	const removeColorById = (colorId: string) => {
+		const next = (colors ?? []).filter((c) => c.id !== colorId);
 		form.setValue("colors", next, { shouldDirty: true, shouldValidate: true });
 	};
 
@@ -102,7 +167,7 @@ export const AddPaletteModal = ({
 		const resolvedTags: string[] = [];
 		const latestTags = useContentStore.getState().tags;
 
-		for (const tag of tags) {
+		for (const tag of tags ?? []) {
 			if (!tag.isNew) {
 				resolvedTags.push(tag.id);
 				continue;
@@ -118,39 +183,32 @@ export const AddPaletteModal = ({
 			resolvedTags.push(createdTag.id);
 		}
 
-		addPalette({
+		const payload = {
 			name: values.name.trim(),
 			colors: values.colors.map((c) => c.oklch),
 			groupIds: values.groupIds,
 			tags: resolvedTags,
-		});
+		};
+
+		if (initialValues?.id) {
+			updatePalette(initialValues.id, payload);
+		} else {
+			addPalette(payload);
+		}
 
 		onOpenChange(false);
 	};
-
-	useEffect(() => {
-		if (!open) {
-			resetAll();
-		}
-	}, [open, resetAll]);
 
 	const disableSubmit =
 		form.formState.isSubmitting ||
 		!colors?.length ||
 		!String(nameValue ?? "").trim();
 
-	const alreadyExists = getIsCurrentColorAlreadyAdded(
-		colors ?? [],
-		workingColor
-	);
-
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
 			<DialogContent className="max-h-[90vh] w-[calc(100vw-1rem)] max-w-3xl overflow-y-auto overflow-x-hidden p-0 sm:max-w-3xl">
 				<DialogHeader className="px-6 pt-6">
-					<DialogTitle className="text-xl">
-						Adicionar paleta de cores
-					</DialogTitle>
+					<DialogTitle className="text-xl">{dialogTitle}</DialogTitle>
 					<DialogDescription>
 						Escolha cores na grelha, nos sliders ou ao editar OKLCH/RGB/HEX/HSL,
 						depois adicione-as à paleta.
@@ -239,12 +297,9 @@ export const AddPaletteModal = ({
 
 					<GroupSelector
 						groups={groups}
-						onToggleGroup={(groupId) => {
-							const current = form.getValues("groupIds");
-							const next = current.includes(groupId)
-								? current.filter((id) => id !== groupId)
-								: [...current, groupId];
-							form.setValue("groupIds", next);
+						lockedGroupIds={lockedGroupIds}
+						onSelectedGroupIdsChange={(next) => {
+							form.setValue("groupIds", next, { shouldValidate: true });
 						}}
 						selectedGroupIds={groupIds ?? []}
 					/>
