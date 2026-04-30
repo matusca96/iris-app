@@ -50,7 +50,7 @@ const QUICK_ACTIONS = [
 		href: "/library?tab=images&modal=add-image",
 		label: "Adicionar imagem",
 		icon: Image01Icon,
-		linkClassName: "border-chart-5/20 bg-chart-5/10",
+		linkClassName: "border-chart-5/20 bg-chart-5/10 hover:bg-chart-5/20",
 		iconContainerClassName: "bg-chart-5/30",
 		iconClassName: "text-chart-5",
 	},
@@ -59,7 +59,8 @@ const QUICK_ACTIONS = [
 		href: "/library?tab=palettes&modal=add-palette",
 		label: "Adicionar paleta",
 		icon: PaintBoardIcon,
-		linkClassName: "border-emerald-500/20 bg-emerald-500/10",
+		linkClassName:
+			"border-emerald-500/20 bg-emerald-500/10 hover:bg-emerald-500/20",
 		iconContainerClassName: "bg-emerald-500/20",
 		iconClassName: "text-emerald-600",
 	},
@@ -68,7 +69,8 @@ const QUICK_ACTIONS = [
 		href: "/collections?modal=create-empty",
 		label: "Criar novo grupo",
 		icon: Folder01Icon,
-		linkClassName: "border-yellow-500/20 bg-yellow-500/10",
+		linkClassName:
+			"border-yellow-500/20 bg-yellow-500/10 hover:bg-yellow-500/20",
 		iconContainerClassName: "bg-yellow-500/20",
 		iconClassName: "text-yellow-600",
 	},
@@ -104,6 +106,49 @@ const getHourInBrazil = (): number => {
 
 	return Number.isNaN(hour) ? 9 : hour;
 };
+
+const QuickActionsCard = () => (
+	<Card>
+		<CardHeader>
+			<CardTitle className="flex items-center gap-2 font-medium text-xl">
+				<HugeiconsIcon className="text-primary" icon={FlashIcon} />
+				Ações rápidas
+			</CardTitle>
+		</CardHeader>
+		<CardContent>
+			<ul className="flex flex-col gap-2">
+				{QUICK_ACTIONS.map((action) => (
+					<li key={action.label}>
+						<Link
+							className={`flex items-center gap-4 rounded-md border p-3 transition-colors ${action.linkClassName}`}
+							href={action.href}
+						>
+							<div
+								className={`corner-squircle rounded-full p-3 ${action.iconContainerClassName}`}
+							>
+								<HugeiconsIcon
+									className={`size-8 ${action.iconClassName}`}
+									icon={action.icon}
+								/>
+							</div>
+							<div className="flex flex-1 flex-col gap-1">
+								<span className="font-medium">{action.label}</span>
+								<span className="text-muted-foreground text-sm">
+									{action.description}
+								</span>
+							</div>
+
+							<HugeiconsIcon
+								className={`size-5 ${action.iconClassName}`}
+								icon={ArrowRightIcon}
+							/>
+						</Link>
+					</li>
+				))}
+			</ul>
+		</CardContent>
+	</Card>
+);
 
 export default function Home() {
 	const images = useContentStore((s) => s.images);
@@ -175,6 +220,41 @@ export default function Home() {
 	const subtitle = hasEntries
 		? "Veja o que está acontecendo com suas coleções"
 		: "Seu espaço ainda está vazio, comece adicionando imagens ou criando paletas para organizar suas ideias!";
+
+	if (!hasEntries) {
+		return (
+			<div className="mt-2 flex flex-col gap-4 pb-4">
+				<header className="space-y-1">
+					<h1 className="font-semibold text-2xl">{greeting}, Pupilo(a)! 👋</h1>
+					<p className="text-muted-foreground">{subtitle}</p>
+				</header>
+
+				<div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+					<Card className="xl:col-span-2">
+						<CardHeader>
+							<CardTitle className="font-medium text-xl">
+								Seu dashboard vai aparecer aqui
+							</CardTitle>
+							<CardDescription>
+								Assim que você adicionar imagens, paletas, grupos ou tags, vamos
+								mostrar insights e visualizações automáticas.
+							</CardDescription>
+						</CardHeader>
+						<CardContent className="space-y-3">
+							<div className="rounded-lg border border-border border-dashed p-6 text-center">
+								<p className="font-medium">Comece com uma ação rápida</p>
+								<p className="text-muted-foreground text-sm">
+									Você pode criar seu primeiro asset em segundos.
+								</p>
+							</div>
+						</CardContent>
+					</Card>
+
+					<QuickActionsCard />
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="mt-2 flex flex-col gap-4 pb-4">
@@ -388,46 +468,7 @@ export default function Home() {
 					</CardFooter>
 				</Card>
 
-				<Card>
-					<CardHeader>
-						<CardTitle className="flex items-center gap-2 font-medium text-xl">
-							<HugeiconsIcon className="text-primary" icon={FlashIcon} />
-							Ações rápidas
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						<ul className="flex flex-col gap-2">
-							{QUICK_ACTIONS.map((action) => (
-								<li key={action.label}>
-									<Link
-										className={`flex items-center gap-4 rounded-md border p-3 transition-colors ${action.linkClassName}`}
-										href={action.href}
-									>
-										<div
-											className={`corner-squircle rounded-full p-3 ${action.iconContainerClassName}`}
-										>
-											<HugeiconsIcon
-												className={`size-8 ${action.iconClassName}`}
-												icon={action.icon}
-											/>
-										</div>
-										<div className="flex flex-1 flex-col gap-1">
-											<span className="font-medium">{action.label}</span>
-											<span className="text-muted-foreground text-sm">
-												{action.description}
-											</span>
-										</div>
-
-										<HugeiconsIcon
-											className={`size-5 ${action.iconClassName}`}
-											icon={ArrowRightIcon}
-										/>
-									</Link>
-								</li>
-							))}
-						</ul>
-					</CardContent>
-				</Card>
+				<QuickActionsCard />
 			</div>
 		</div>
 	);
