@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
+	AiBeautifyIcon,
 	CheckmarkBadge01Icon,
 	Link04Icon,
 	Loading01Icon,
@@ -10,6 +11,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { generateImageTagsAction } from "@/app/library/actions";
 import { GroupSelector } from "@/components/group-selector";
 import { TagSelector } from "@/components/tag-selector";
 import { Button } from "@/components/ui/button";
@@ -28,11 +30,15 @@ import {
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
+import { Separator } from "@/components/ui/separator";
 import { mergeModalGroupIds } from "@/lib/merge-modal-group-ids";
 import { useContentStore } from "@/store/content";
 import {
 	findTagByNormalizedName,
 	formatPreviewError,
+	NEW_TAG_ID_PREFIX,
+	normalizeTagName,
+	TAG_COLOR_OPTIONS,
 } from "./add-image-modal.helpers";
 import {
 	type AddImageFormValues,
@@ -58,6 +64,10 @@ export const AddImageModal = ({
 	initialValues,
 }: AddImageModalProps) => {
 	const [tagQuery, setTagQuery] = useState("");
+	const [tagGenerationError, setTagGenerationError] = useState<string | null>(
+		null
+	);
+	const [isGeneratingTags, setIsGeneratingTags] = useState(false);
 
 	const { groups, addImage, addTag, updateImage } = useContentStore();
 
@@ -82,6 +92,8 @@ export const AddImageModal = ({
 	const resetForm = useCallback(() => {
 		form.reset();
 		setTagQuery("");
+		setTagGenerationError(null);
+		setIsGeneratingTags(false);
 		resetPreview();
 	}, [form, resetPreview]);
 
@@ -206,9 +218,67 @@ export const AddImageModal = ({
 		onOpenChange(false);
 	};
 
+	const handleGenerateTags = async () => {
+		const trimmedUrl = (url ?? "").trim();
+		if (!trimmedUrl) {
+			return;
+		}
+
+		setTagGenerationError(null);
+		setIsGeneratingTags(true);
+
+		try {
+			const { tags: suggestedTags } = await generateImageTagsAction({
+				imageUrl: trimmedUrl,
+				imageName: form.getValues("name").trim(),
+				existingTagNames: useContentStore
+					.getState()
+					.tags.map((tag) => tag.name),
+				availableColors: [...TAG_COLOR_OPTIONS],
+			});
+
+			const selectedTags = tags ?? [];
+			const usedNames = new Set(
+				selectedTags.map((tag) => normalizeTagName(tag.name))
+			);
+			const nextTags = [...selectedTags];
+
+			for (const suggestedTag of suggestedTags) {
+				const normalizedName = normalizeTagName(suggestedTag.name);
+				if (!normalizedName || usedNames.has(normalizedName)) {
+					continue;
+				}
+
+				usedNames.add(normalizedName);
+				nextTags.push({
+					id: `${NEW_TAG_ID_PREFIX}${normalizedName}`,
+					name: suggestedTag.name,
+					color: suggestedTag.color,
+					isNew: true,
+				});
+			}
+
+			form.setValue("tags", nextTags, {
+				shouldValidate: true,
+				shouldDirty: true,
+			});
+		} catch {
+			setTagGenerationError(
+				"Nao foi possivel gerar tags agora. Tente novamente em instantes."
+			);
+		} finally {
+			setIsGeneratingTags(false);
+		}
+	};
+
 	const disableSubmit =
 		form.formState.isSubmitting ||
 		(!isEditMode && previewStatus === "checking");
+	const disableGenerateTags =
+		isGeneratingTags ||
+		form.formState.isSubmitting ||
+		previewStatus === "checking" ||
+		!(url ?? "").trim();
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
@@ -309,6 +379,40 @@ export const AddImageModal = ({
 								setTagQuery={setTagQuery}
 								tagQuery={tagQuery}
 							/>
+							<div className="relative flex w-full items-center">
+								<Separator className="flex-1" />
+								<span className="shrink-0 px-3 text-muted-foreground text-xs uppercase">
+									OU
+								</span>
+								<Separator className="flex-1" />
+							</div>
+							<div className="flex w-full flex-col items-start gap-1">
+								<Button
+									className="w-full border-0 bg-linear-to-r from-violet-500 via-fuchsia-500 to-sky-500 text-white shadow-md transition-opacity hover:opacity-90"
+									disabled={disableGenerateTags}
+									onClick={handleGenerateTags}
+								>
+									{isGeneratingTags ? (
+										<>
+											<HugeiconsIcon
+												className="size-4 animate-spin"
+												icon={Loading01Icon}
+											/>
+											Gerando tags...
+										</>
+									) : (
+										<>
+											<HugeiconsIcon icon={AiBeautifyIcon} />
+											Gerar tags
+										</>
+									)}
+								</Button>
+								{tagGenerationError ? (
+									<p className="text-destructive text-xs">
+										{tagGenerationError}
+									</p>
+								) : null}
+							</div>
 						</div>
 					</div>
 
