@@ -24,8 +24,8 @@ export const CollectionCard = ({
 	const isFullyEmpty = imageCount === 0 && paletteCount === 0;
 
 	return (
-		<article className="rounded-xl border border-border bg-card">
-			<header className="flex flex-wrap items-start justify-between gap-3 p-4 pb-3">
+		<article className="flex h-full min-h-0 flex-col rounded-xl border border-border bg-card">
+			<header className="flex shrink-0 flex-wrap items-start justify-between gap-3 p-4 pb-3">
 				<h2 className="font-semibold text-base">{group.name}</h2>
 				<div className="flex flex-wrap items-center gap-2">
 					<p className="text-muted-foreground text-xs">
@@ -48,7 +48,7 @@ export const CollectionCard = ({
 			</header>
 			<Separator />
 			{isFullyEmpty ? (
-				<div className="px-4 pt-4 pb-4">
+				<div className="flex min-h-0 flex-1 flex-col px-4 py-6">
 					<CollectionCardFullyEmpty />
 				</div>
 			) : (
